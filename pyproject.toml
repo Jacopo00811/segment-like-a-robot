@@ -7,7 +7,7 @@ name = "ego_3d"
 version = "0.0.1"
 description = "This project evaluates state-of-the-art 3D instance semantic segmentation models in robotics-relevant scenarios. While current top models perform well on complete 360-degree point clouds, they haven\u0027t been thoroughly tested on the egocentric, partially occluded point clouds typical in real-world robotics applications. The project aims to assess how these advanced segmentation techniques perform when faced with the partial observations and occlusions that robots commonly encounter, bridging the gap between idealized test conditions and practical robotic vision challenges."
 authors = [
-  { name = "Group 10", email = "your@email.com" },
+  { name = "Group 10", email = "jacopo.ceccuti@gmail.com" },
 ]
 license = { file = "LICENSE" }
 keywords = ["machine learning", "MLOps"]
