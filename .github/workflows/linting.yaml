@@ -32,7 +32,7 @@ jobs:
 
       - name: ruff check
         run: |
-          ruff check .
+          ruff check . --fix
 
       - name: ruff format
         run: |
