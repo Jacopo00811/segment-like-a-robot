@@ -5,25 +5,36 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ego_3d"
 version = "0.0.1"
-description = "This project evaluates state-of-the-art 3D instance semantic segmentation models in robotics-relevant scenarios. While current top models perform well on complete 360-degree point clouds, they haven\u0027t been thoroughly tested on the egocentric, partially occluded point clouds typical in real-world robotics applications. The project aims to assess how these advanced segmentation techniques perform when faced with the partial observations and occlusions that robots commonly encounter, bridging the gap between idealized test conditions and practical robotic vision challenges."
+description = "This project evaluates state-of-the-art 3D instance semantic segmentation models in robotics-relevant scenarios. While current top models perform well on complete 360-degree point clouds, they haven't been thoroughly tested on the egocentric, partially occluded point clouds typical in real-world robotics applications. The project aims to assess how these advanced segmentation techniques perform when faced with the partial observations and occlusions that robots commonly encounter, bridging the gap between idealized test conditions and practical robotic vision challenges."
 authors = [
   { name = "Group 10", email = "jacopo.ceccuti@gmail.com" },
 ]
 license = { file = "LICENSE" }
-keywords = ["machine learning", "MLOps"]
+keywords = ["segmentation", "3D"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
 ]
 readme = "README.md"
 requires-python = ">=3.12.9"
-dynamic = ["dependencies", "optional-dependencies"]
+dependencies = [
+  "numpy>=2.2.4",
+  "open3d>=0.19.0",
+  "torch==2.5.1",
+  "typer==0.15.2",
+]
 
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-
-[tool.setuptools.dynamic.optional-dependencies]
-dev = {file = ['requirements_dev.txt']}
+[project.optional-dependencies]
+dev = [
+  "invoke==2.2.0",
+  "pre-commit==4.1.0",
+  "pytest==8.3.5",
+  "coverage==7.6.12",
+  "ruff==0.11.0",
+  "mkdocs==1.6.1",
+  "mkdocs-material==9.4.6",
+  "mkdocstrings-python==1.16.5"
+]
 
 [tool.ruff]
 line-length = 120
