@@ -20,10 +20,10 @@ import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 from pathlib import Path
-from tdmn import tqdm
+from tqdm import tqdm
 
 # Load external constants
-from meta_data.scannet200_constants import VALID_CLASS_IDS_200, VALID_CLASS_IDS_20
+from metadata.scannet200_constants import VALID_CLASS_IDS_200, VALID_CLASS_IDS_20
 
 CLOUD_FILE_PFIX = "_vh_clean_2"
 SEGMENTS_FILE_PFIX = ".0.010000.segs.json"
