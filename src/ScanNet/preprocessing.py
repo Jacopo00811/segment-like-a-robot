@@ -3,6 +3,10 @@ Preprocessing Script for ScanNet 20/200
 
 Author: Xiaoyang Wu (xiaoyang.wu.cs@gmail.com)
 Please cite our work if the code is helpful to you.
+
+
+Preprocesses the data into three folders: test, val, train. Each containing all the scenes
+each consisting of color.npy  coord.npy  instance.npy  normal.npy  segment20.npy  segment200.npy.
 """
 
 import warnings
@@ -239,6 +243,7 @@ if __name__ == "__main__":
     scene_paths = sorted(glob.glob(config.dataset_root + "/scans*/scene*"))
 
     # Preprocess data.
+    """
     print("Processing scenes...")
     pool = ProcessPoolExecutor(max_workers=config.num_workers)
     _ = list(
@@ -252,3 +257,30 @@ if __name__ == "__main__":
             repeat(config.parse_normals),
         )
     )
+    """
+
+    print("Processing scenes...")
+    pool = ProcessPoolExecutor(max_workers=config.num_workers)
+    results = []
+    with tqdm(total=len(scene_paths), desc="Preprocessing Scenes") as pbar:
+        futures = [
+            pool.submit(
+                handle_process,
+                scene_path,
+                config.output_root,
+                labels_pd,
+                train_scenes,
+                val_scenes,
+                config.parse_normals,
+            )
+            for scene_path in scene_paths
+        ]
+        for future in futures:
+            try:
+                future.result()  # Wait for the result (and catch potential exceptions)
+                pbar.update(1)
+            except Exception as e:
+                print(f"Error processing scene: {e}")
+    
+    pool.shutdown()
+    print("Preprocessing finished.")
