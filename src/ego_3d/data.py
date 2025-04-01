@@ -1,37 +1,85 @@
-# from pathlib import Path
-
-# import typer
-# from torch.utils.data import Dataset
-
-
-# class MyDataset(Dataset):
-#     """My custom dataset."""
-
-#     def __init__(self, data_path: Path) -> None:
-#         self.data_path = data_path
-
-#     def __len__(self) -> int:
-#         """Return the length of the dataset."""
-
-#     def __getitem__(self, index: int):
-#         """Return a given sample from the dataset."""
-
-#     def preprocess(self, output_folder: Path) -> None:
-#         """Preprocess the raw data and save it to the output folder."""
-
-# def preprocess(data_path: Path, output_folder: Path) -> None:
-#     print("Preprocessing data...")
-#     dataset = MyDataset(data_path)
-#     dataset.preprocess(output_folder)
-
-
-# if __name__ == "__main__":
-#     typer.run(preprocess)
-
-
+from pathlib import Path
 
 import numpy as np
 import open3d as o3d
+import typer
+from torch.utils.data import Dataset
+from load_config import load_cfg
+
+
+import torch
+from functools import partial
+
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../pointcept_repo")))
+
+from PointTransformerV3.Pointcept.pointcept.datasets import build_dataset, point_collate_fn
+from PointTransformerV3.Pointcept.pointcept.utils import comm
+from PointTransformerV3.Pointcept.pointcept.datasets.defaults import worker_init_fn
+
+
+class MyDataset(Dataset):
+    """My custom dataset."""
+
+    def __init__(self, data_path: Path) -> None:
+        self.data_path = data_path
+
+    def __len__(self) -> int:
+        """Return the length of the dataset."""
+
+    def __getitem__(self, index: int):
+        """Return a given sample from the dataset."""
+
+    def preprocess(self, output_folder: Path) -> None:
+        """Preprocess the raw data and save it to the output folder."""
+
+
+def build_dataloader(cfg, mode="train"):
+    assert mode in ["train", "val"]
+    dataset_cfg = cfg.data.train if mode == "train" else cfg.data.val
+    dataset = build_dataset(dataset_cfg)
+
+    sampler = (
+        torch.utils.data.distributed.DistributedSampler(dataset)
+        if comm.get_world_size() > 1
+        else None
+    )
+
+    init_fn = (
+        partial(
+            worker_init_fn,
+            num_workers=cfg.num_worker_per_gpu,
+            rank=comm.get_rank(),
+            seed=cfg.seed,
+        )
+        if cfg.seed is not None
+        else None
+    )
+
+    collate = (
+        partial(point_collate_fn, mix_prob=cfg.mix_prob)
+        if mode == "train"
+        else None  # Use default or different for val
+    )
+
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=cfg.batch_size_per_gpu if mode == "train" else cfg.batch_size_val_per_gpu,
+        shuffle=(sampler is None and mode == "train"),
+        sampler=sampler,
+        num_workers=cfg.num_worker_per_gpu,
+        pin_memory=True,
+        drop_last=True if mode == "train" else False,
+        collate_fn=collate,
+        worker_init_fn=init_fn,
+        persistent_workers=True,
+    )
+    return dataloader
+
+
+
 
 def print_point_cloud_stats(point_cloud):
     """
@@ -111,6 +159,7 @@ def cut_point_cloud(point_cloud, camera_pos, phi, theta, dubleAlpha, dubleBeta):
     return result
 
     
+
 if __name__ == "__main__":
     # Load the data
     pcd = o3d.io.read_point_cloud("data/raw/scene0000_00_vh_clean.ply")
@@ -120,3 +169,10 @@ if __name__ == "__main__":
     filtered_points = cut_point_cloud(pcd, center, 45, 90, 40, 180)
 
     o3d.io.write_point_cloud("data/processed/visible_points.ply", filtered_points)
+    
+    
+    
+    cfg = load_cfg()
+    train_loader = build_dataloader(cfg, mode="train")
+    print(train_loader)
+
