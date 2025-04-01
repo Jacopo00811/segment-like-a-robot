@@ -1,0 +1,15 @@
+data:
+  train:
+    type: YourDataset
+    root: /dtu/blackhole/0e/169006/ScanNet/preprocessed/train
+  val:
+    type: YourDataset
+    root: /dtu/blackhole/0e/169006/ScanNet/preprocessed/val
+  test:
+    type: YourDataset
+    root: /dtu/blackhole/0e/169006/ScanNet/preprocessed/test
+
+batch_size_per_gpu: 8
+batch_size_val_per_gpu: 4
+num_worker_per_gpu: 4
+mix_prob: 0.1
