@@ -10,8 +10,7 @@
 #     train()
 
 # Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py
-
-from Pointcept.pointcept.models.point_transformer_v3.point_transformer_v3m1_base import PointTransformerV3
+from pointcept.models.point_transformer_v3.point_transformer_v3m1_base import PointTransformerV3
 
 
 model = PointTransformerV3() 
