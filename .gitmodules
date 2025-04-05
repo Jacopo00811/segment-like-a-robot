@@ -1,6 +1,3 @@
 [submodule "src/ScanNet/Pointcept"]
 	path = src/ScanNet/Pointcept
 	url = git@github.com:aka-lowe/Pointcept.git
-[submodule "PointTransformerV3"]
-	path = PointTransformerV3
-	url = https://github.com/Pointcept/PointTransformerV3.git
