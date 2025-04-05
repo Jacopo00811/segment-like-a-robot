@@ -1,3 +1,0 @@
-[submodule "src/ego_3d/Pointcept"]
-	path = src/ego_3d/Pointcept
-	url = https://github.com/Pointcept/Pointcept.git
