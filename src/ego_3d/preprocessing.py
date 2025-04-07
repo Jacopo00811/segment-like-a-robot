@@ -13,21 +13,22 @@ import warnings
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-import os
 import argparse
 import glob
 import json
-import plyfile
-import numpy as np
-import pandas as pd
 import multiprocessing as mp
+import os
 from concurrent.futures import ProcessPoolExecutor
 from itertools import repeat
 from pathlib import Path
-from tqdm import tqdm
+
+import numpy as np
+import pandas as pd
+import plyfile
 
 # Load external constants
-from metadata.scannet200_constants import VALID_CLASS_IDS_200, VALID_CLASS_IDS_20
+from metadata.scannet200_constants import VALID_CLASS_IDS_20, VALID_CLASS_IDS_200
+from tqdm import tqdm
 
 CLOUD_FILE_PFIX = "_vh_clean_2"
 SEGMENTS_FILE_PFIX = ".0.010000.segs.json"
@@ -97,14 +98,10 @@ def vertex_normal(vertex, face):
     return nv
 
 
-def handle_process(
-    scene_path, output_path, labels_pd, train_scenes, val_scenes, parse_normals=True
-):
+def handle_process(scene_path, output_path, labels_pd, train_scenes, val_scenes, parse_normals=True):
     scene_id = os.path.basename(scene_path)
     mesh_path = os.path.join(scene_path, f"{scene_id}{CLOUD_FILE_PFIX}.ply")
-    segments_file = os.path.join(
-        scene_path, f"{scene_id}{CLOUD_FILE_PFIX}{SEGMENTS_FILE_PFIX}"
-    )
+    segments_file = os.path.join(scene_path, f"{scene_id}{CLOUD_FILE_PFIX}{SEGMENTS_FILE_PFIX}")
     aggregations_file = os.path.join(scene_path, f"{scene_id}{AGGREGATIONS_FILE_PFIX}")
     info_file = os.path.join(scene_path, f"{scene_id}.txt")
 
@@ -164,9 +161,7 @@ def handle_process(
         semantic_gt200 = np.ones((vertices.shape[0]), dtype=np.int16) * IGNORE_INDEX
         instance_ids = np.ones((vertices.shape[0]), dtype=np.int16) * IGNORE_INDEX
         for group in seg_groups:
-            point_idx, label_id20, label_id200 = point_indices_from_group(
-                seg_indices, group, labels_pd
-            )
+            point_idx, label_id20, label_id200 = point_indices_from_group(seg_indices, group, labels_pd)
 
             semantic_gt20[point_idx] = label_id20
             semantic_gt200[point_idx] = label_id200
@@ -183,9 +178,7 @@ def handle_process(
         # Concatenate with original cloud
         processed_vertices = np.hstack((semantic_gt200, instance_ids))
 
-        if np.any(np.isnan(processed_vertices)) or not np.all(
-            np.isfinite(processed_vertices)
-        ):
+        if np.any(np.isnan(processed_vertices)) or not np.all(np.isfinite(processed_vertices)):
             raise ValueError(f"Find NaN in Scene: {scene_id}")
 
     # Save processed data
@@ -206,9 +199,7 @@ if __name__ == "__main__":
         required=True,
         help="Output path where train/val folders will be located",
     )
-    parser.add_argument(
-        "--parse_normals", default=True, type=bool, help="Whether parse point normals"
-    )
+    parser.add_argument("--parse_normals", default=True, type=bool, help="Whether parse point normals")
     parser.add_argument(
         "--num_workers",
         default=mp.cpu_count(),
@@ -281,6 +272,6 @@ if __name__ == "__main__":
                 pbar.update(1)
             except Exception as e:
                 print(f"Error processing scene: {e}")
-    
+
     pool.shutdown()
     print("Preprocessing finished.")

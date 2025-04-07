@@ -195,6 +195,7 @@ dependencies = [
     { name = "numpy" },
     { name = "open3d" },
     { name = "plyfile" },
+    { name = "ruff" },
     { name = "torch" },
     { name = "typer" },
 ]
@@ -223,6 +224,7 @@ requires-dist = [
     { name = "plyfile", specifier = ">=1.1" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "==4.2.0" },
     { name = "pytest", marker = "extra == 'dev'", specifier = "==8.3.5" },
+    { name = "ruff", specifier = ">=0.11.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "==0.11.0" },
     { name = "torch", specifier = "==2.5.1" },
     { name = "typer", specifier = "==0.15.2" },

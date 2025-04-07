@@ -56,13 +56,12 @@ started with Machine Learning Operations (MLOps).
 
 ## Mask3D
 ### Project set-up
-- Create conda environment
-- Downgrade pip to 23.3
+- Create conda environment: conda create -n condaEnv python=3.10.9
+- Downgrade pip to 23.3: python -m pip install --force-reinstall pip==23.3
 - activate environment
+- pip install numpy
 - pip install "cython<3.0.0" && pip install --no-build-isolation pyyaml==5.4.1
-- pip install "cython<3.0.0" \
-&& pip install --no-build-isolation "pycocotools==2.0.4" \
-&& pip install --no-build-isolation "pyyaml==5.4.1"
+- conda install -c conda-forge pycocotools==2.0.4
 - follow the rest of the project set-up.
 - dependencies cuda 11.3, openblas default, gcc 9.5.0
 
@@ -90,11 +89,14 @@ echo 'export CUDA_HOME=/appl/cuda/12.4.0' >> ~/.bashrc
 
 4. Install torch modules
 ```
-pip install --no-build-isolation torch==2.5.0 torchvision==0.13.1 torchaudio==0.20.0 --index-url https://download.pytorch.org/whl/cu124
+pip install --no-build-isolation torch==2.5.1  torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
-5. Install Pointcept as a module
+5. Install Pointcept as a module and run other CUDA commands
 ```
 pip install --no-build-isolation -e ./Pointcept
+source ~/.bashrc
+export CUDA_HOME=/appl/cuda/12.4.0
+export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;9.0"
 ```
 
 6. Install Pointops as a module
