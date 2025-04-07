@@ -68,4 +68,40 @@ started with Machine Learning Operations (MLOps).
 
 
 ## PointTransformerV3
-### Project set-up
+
+### Environment set-up
+
+**Dependencies:**
+- Cuda 12.4
+- Python <= 3.12.9
+
+1. Create or activate virtual environment
+
+2. Ensure submodules are up to date by running:
+```
+git submodule init
+git submodule update
+```
+
+3. Export CUDA_HOME environment variable
+```
+echo 'export CUDA_HOME=/appl/cuda/12.4.0' >> ~/.bashrc
+```
+
+4. Install torch modules
+```
+pip install --no-build-isolation torch==2.5.0 torchvision==0.13.1 torchaudio==0.20.0 --index-url https://download.pytorch.org/whl/cu124
+```
+5. Install Pointcept as a module
+```
+pip install --no-build-isolation -e ./Pointcept
+```
+
+6. Install Pointops as a module
+```
+pip install --no-build-isolation ./Pointcept/libs/pointops
+```
+
+7. Install pointgroup_ops
+TODO: Fix this and update docs
+
