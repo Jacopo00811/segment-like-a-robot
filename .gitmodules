@@ -1,3 +1,6 @@
 [submodule "Pointcept"]
 	path = Pointcept
 	url = https://github.com/aka-lowe/Pointcept.git
+[submodule "externals/Mask3D"]
+	path = externals/Mask3D
+	url = https://github.com/JonasSchult/Mask3D.git
