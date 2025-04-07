@@ -96,6 +96,10 @@ def print_point_cloud_stats(point_cloud):
     print("--------------- CHECK NAN VALUES ---------------")
     print(np.isnan(points).any(), np.isnan(colors).any(), np.isnan(normals).any())
     print("--------------- BOUNDARIES ---------------")
+    # Do not count NaN values
+    print(f"POINTS - Min: {np.nanmin(points, axis=0)} Max: {np.nanmax(points, axis=0)}")
+    print(f"COLORS - Min: {np.nanmin(colors, axis=0)} Max: {np.nanmax(colors, axis=0)}")
+    print(f"NORMS - Min: {np.nanmin(normals, axis=0)} Max: {np.nanmax(normals, axis=0)}")
     print(f"POINTS - Min: {points.min(axis=0)} Max: {points.max(axis=0)}")
     print(f"COLORS - Min: {colors.min(axis=0)} Max: {colors.max(axis=0)}")
     print(f"NORMS - Min: {normals.min(axis=0)} Max: {normals.max(axis=0)}")
@@ -116,6 +120,8 @@ def cut_point_cloud(point_cloud, camera_pos, phi, theta, dubleAlpha, dubleBeta):
         theta: angle between the z-axis of the new coordinate system and the direction view vector
         dubleAlpha: horizontal field of view
         dubleBeta: vertical field of view
+    Returns:
+        open3d.geometry.PointCloud
     """
     # Convert all angles to radians
     phi = np.radians(phi)
@@ -158,16 +164,125 @@ def cut_point_cloud(point_cloud, camera_pos, phi, theta, dubleAlpha, dubleBeta):
 
     return result
 
+
+def cut_point_cloud_npy(coords, colors, instances, normals, segment20, segment200,
+                       camera_pos, phi, theta, dubleAlpha, dubleBeta):
+    """
+    Cut the point cloud based on the camera position and the specified angles.
+    Args:
+        coords: np.array of shape (N, 3) with XYZ coordinates
+        colors: np.array of shape (N, 3) with RGB values
+        instances: np.array of shape (N) with instance segmentation labels
+        normals: np.array of shape (N, 3) with normal vectors
+        segment20: np.array of shape (N) with 20-class segmentation labels
+        segment200: np.array of shape (N) with 200-class segmentation labels
+        camera_pos: camera position np.array([x, y, z]) of float
+        phi: angle between the x-axis and the projection of view vector on xy-plane (degrees)
+        theta: angle between the z-axis and the direction view vector (degrees)
+        dubleAlpha: horizontal field of view (degrees)
+        dubleBeta: vertical field of view (degrees)
+        
+    Returns:
+        Tuple of filtered arrays (coords, colors, instances, normals, segment20, segment200)
+    """
+    # Convert all angles to radians
+    phi = np.radians(phi)
+    theta = np.radians(theta)
+    dubleAlpha = np.radians(dubleAlpha)
+    dubleBeta = np.radians(dubleBeta)
     
+    # Scale colors in 0-1 range
+    colors = colors / 255
 
+    # Shift the origin to the camera position
+    points_centered = coords - camera_pos
+
+    # Calculate angle on the xy-plane and check if the point is inside the alpha range
+    gammas = np.arctan2(points_centered[:, 1], points_centered[:, 0]) % (2 * np.pi)
+    is_inside_alpha = np.logical_and(gammas >= phi - dubleAlpha/2, gammas <= phi + dubleAlpha/2)
+    
+    # Keep only the points that are inside the alpha range
+    points_centered = points_centered[is_inside_alpha]
+    filtered_colors = colors[is_inside_alpha]
+    filtered_instances = instances[is_inside_alpha]
+    filtered_normals = normals[is_inside_alpha]
+    filtered_segment20 = segment20[is_inside_alpha]
+    filtered_segment200 = segment200[is_inside_alpha]
+    gammas = gammas[is_inside_alpha]
+
+    # Calculate the angle between the z-axis and the point
+    omegas = np.arctan2(np.sqrt(np.pow(points_centered[:, 0], 2) + np.pow(points_centered[:, 1], 2))*np.cos(phi - gammas), points_centered[:, 2])
+    is_inside_beta = np.logical_and(omegas >= theta - dubleBeta/2, omegas <= theta + dubleBeta/2)
+
+    # Keep only the points that are also inside the beta range and shift the origin back to the camera position
+    filtered_coords = points_centered[is_inside_beta] + camera_pos
+    filtered_colors = filtered_colors[is_inside_beta]
+    filtered_instances = filtered_instances[is_inside_beta]
+    filtered_normals = filtered_normals[is_inside_beta]
+    filtered_segment20 = filtered_segment20[is_inside_beta]
+    filtered_segment200 = filtered_segment200[is_inside_beta]
+
+    return (filtered_coords, filtered_colors, filtered_instances, filtered_normals, 
+            filtered_segment20, filtered_segment200)
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 if __name__ == "__main__":
-    # Load the data
-    pcd = o3d.io.read_point_cloud("data/raw/scene0000_00_vh_clean.ply")
 
-    print_point_cloud_stats(pcd)
-    center = pcd.get_center()
-    filtered_points = cut_point_cloud(pcd, center, 45, 90, 40, 180)
+    ##### HOW TO USE cut_point_cloud #####
+    # pcd = o3d.io.read_point_cloud("data/raw/scene0000_00_vh_clean.ply")
+    # print_point_cloud_stats(pcd)
+    # center = pcd.get_center()
+    # filtered_points = cut_point_cloud(pcd, center, 180, 90, 130, 150)
+    # o3d.io.write_point_cloud("data/processed/visible_points.ply", filtered_points)
 
+    ##### HOW TO USE cut_point_cloud_npy #####
+    coords = np.load("data/raw/scene0706_00/coord.npy")
+    colors = np.load("data/raw/scene0706_00/color.npy")
+    instances = np.load("data/raw/scene0706_00/instance.npy")
+    normals = np.load("data/raw/scene0706_00/normal.npy")
+    segment20 = np.load("data/raw/scene0706_00/segment20.npy")
+    segment200 = np.load("data/raw/scene0706_00/segment200.npy")
+
+    # Rescale colors to 0-1 range if you want to save initial point cloud
+    # colors = colors / 255
+
+    original_pcd = o3d.geometry.PointCloud()
+    original_pcd.points = o3d.utility.Vector3dVector(coords)
+    original_pcd.colors = o3d.utility.Vector3dVector(colors)
+    original_pcd.normals = o3d.utility.Vector3dVector(normals)
+    output_path = "data/processed/original_point_cloud.ply"
+    o3d.io.write_point_cloud(output_path, original_pcd)
+
+    camera_pos = np.array([1.0, 0.3, 0.6])
+    phi = 90 
+    theta = 90 
+    dubleAlpha = 130
+    dubleBeta = 150
+
+    filtered_coords, filtered_colors, filtered_instances, filtered_normals, filtered_segment20, filtered_segment200 = cut_point_cloud_npy(
+        coords, colors, instances, normals, segment20, segment200,
+        camera_pos, phi, theta, dubleAlpha, dubleBeta
+    )
+
+    filtered_pcd = o3d.geometry.PointCloud()
+    filtered_pcd.points = o3d.utility.Vector3dVector(filtered_coords)
+    filtered_pcd.colors = o3d.utility.Vector3dVector(filtered_colors)
+    filtered_pcd.normals = o3d.utility.Vector3dVector(filtered_normals)
+    output_path = "data/processed/filtered_point_cloud.ply"
+    o3d.io.write_point_cloud(output_path, filtered_pcd)
+    
     o3d.io.write_point_cloud("data/processed/visible_points.ply", filtered_points)
     
     
@@ -175,4 +290,5 @@ if __name__ == "__main__":
     cfg = load_cfg()
     train_loader = build_dataloader(cfg, mode="train")
     print(train_loader)
+
 
