@@ -56,15 +56,18 @@ started with Machine Learning Operations (MLOps).
 
 ## Mask3D
 ### Project set-up
-- Create conda environment
-- Downgrade pip to 23.3
+- Create conda environment: conda create -n ENVNAME python=3.10.9
+- Downgrade pip to 23.3: python -m pip install --force-reinstall pip==23.3
 - activate environment
+- pip install numpy
 - pip install "cython<3.0.0" && pip install --no-build-isolation pyyaml==5.4.1
-- pip install "cython<3.0.0" \
-&& pip install --no-build-isolation "pycocotools==2.0.4" \
-&& pip install --no-build-isolation "pyyaml==5.4.1"
-- follow the rest of the project set-up.
-- dependencies cuda 11.3, openblas default, gcc 9.5.0
+- conda install -c conda-forge pycocotools==2.0.4
+- conda env update --name ENVNAME --file PATH_TO_REPO/segment-like-a-robot/externals/Mask3D/environment.yml
+- dependencies cuda 11.3, openblas default, gcc 9.5.0: module load gcc/9.5.0-binutils-2.38 openblas cuda/11.3   
+- source ~/.bashrc 
+export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6" 
+export CUDA_HOME=/appl/cuda/11.3.0
+- follow the rest of the project set-up (from the first pip3 command)
 
 
 ## PointTransformerV3
@@ -90,11 +93,14 @@ echo 'export CUDA_HOME=/appl/cuda/12.4.0' >> ~/.bashrc
 
 4. Install torch modules
 ```
-pip install --no-build-isolation torch==2.5.0 torchvision==0.13.1 torchaudio==0.20.0 --index-url https://download.pytorch.org/whl/cu124
+pip install --no-build-isolation torch==2.5.1  torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 ```
-5. Install Pointcept as a module
+5. Install Pointcept as a module and run other CUDA commands
 ```
 pip install --no-build-isolation -e ./Pointcept
+source ~/.bashrc
+export CUDA_HOME=/appl/cuda/12.4.0
+export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;9.0"
 ```
 
 6. Install Pointops as a module
@@ -103,5 +109,13 @@ pip install --no-build-isolation ./Pointcept/libs/pointops
 ```
 
 7. Install pointgroup_ops
-TODO: Fix this and update docs
-
+cd externals 
+git clone https://github.com/sparsehash/sparsehash.git
+cd sparsehash
+./configure --prefix=$HOME/.local
+make
+make install
+export CPLUS_INCLUDE_PATH=$HOME/.local/include:$CPLUS_INCLUDE_PATH
+cd ../../Pointcept/libs/pointgroup_ops/
+export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6"
+uv pip install --no-build-isolation .
