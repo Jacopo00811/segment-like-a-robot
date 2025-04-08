@@ -56,13 +56,14 @@ started with Machine Learning Operations (MLOps).
 
 ## Mask3D
 ### Project set-up
-- Create conda environment: conda create -n condaEnv python=3.10.9
+- Create conda environment: conda create -n ENVNAME python=3.10.9
 - Downgrade pip to 23.3: python -m pip install --force-reinstall pip==23.3
 - activate environment
 - pip install numpy
 - pip install "cython<3.0.0" && pip install --no-build-isolation pyyaml==5.4.1
 - conda install -c conda-forge pycocotools==2.0.4
-- follow the rest of the project set-up.
+- conda env update --name ENVNAME --file PATH_TO_REPO/segment-like-a-robot/externals/Mask3D/environment.yml
+- follow the rest of the project set-up (from the first pip3 command)
 - dependencies cuda 11.3, openblas default, gcc 9.5.0
 
 
