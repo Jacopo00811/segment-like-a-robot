@@ -180,3 +180,5 @@ cython_debug/
 .nfs*
 *.ply
 *.npy
+# ignore sparsehash files
+externals/sparsehash/

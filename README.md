@@ -109,5 +109,13 @@ pip install --no-build-isolation ./Pointcept/libs/pointops
 ```
 
 7. Install pointgroup_ops
-TODO: Fix this and update docs
-
+cd externals 
+git clone https://github.com/sparsehash/sparsehash.git
+cd sparsehash
+./configure --prefix=$HOME/.local
+make
+make install
+export CPLUS_INCLUDE_PATH=$HOME/.local/include:$CPLUS_INCLUDE_PATH
+cd ../../Pointcept/libs/pointgroup_ops/
+export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6"
+uv pip install --no-build-isolation .
