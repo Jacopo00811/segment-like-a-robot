@@ -119,3 +119,8 @@ export CPLUS_INCLUDE_PATH=$HOME/.local/include:$CPLUS_INCLUDE_PATH
 cd ../../Pointcept/libs/pointgroup_ops/
 export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6"
 uv pip install --no-build-isolation .
+
+
+# Development (Only for developers of the project)
+Blackhole location of data in DTU HPC cluster (read-only)
+/dtu/blackhole/0e/169006/ScanNet
