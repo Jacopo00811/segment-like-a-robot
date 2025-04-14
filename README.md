@@ -153,6 +153,11 @@ color.npy  coord.npy  instance.npy  normal.npy  segment200.npy  segment20.npy
 ```
 
 
+
+Marcos' stuff (delete later)
+
+python src/ego_3d/sens_reader/reader.py --filename /dtu/datasets2/ScanNet/ScanNetV2/scans/scene0704_01/scene0704_01.sens --output_path ~/marcos/advdlcvp/poses/ --export_poses
+
 uv venv --python 3.11.9
 source .venv/bin/activate
 cd advdlcvp
@@ -188,3 +193,8 @@ cd ../../Pointcept/libs/pointgroup_ops/
 export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6"
 uv pip install --no-build-isolation .
 uv pip install --no-build-isolation flash_attn 
+
+
+
+
+python src/ego_3d/sens_reader/reader.py --filename /dtu/datasets2/ScanNet/ScanNetV2/scans/scene0179_00/scene0179_00.sens --output_path ~/marcos/advdlcvp/poses/ --export_poses

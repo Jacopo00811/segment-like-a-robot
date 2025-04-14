@@ -3,6 +3,9 @@ from pathlib import Path
 import numpy as np
 import open3d as o3d
 from torch.utils.data import Dataset
+import os 
+
+from sens_reader.SensorData import SensorData
 
 class MyDataset(Dataset):
     """My custom dataset."""
@@ -215,9 +218,37 @@ def cut_point_cloud_npy(
         filtered_segment200,
     )
 
-def extract_camera_poses(sens_file):
+def load_camera_poses(poses_root, scene_name):
     """
-    Placeholder function to extract camera poses from a .sens file.
+    Load camera poses from text files stored in poses_root/scene_name/
+    
+    Each text file is expected to contain a 4x4 matrix, one row per line,
+    with values separated by whitespace.
+    
+    Args:
+        poses_root (str or Path): Root directory where poses are stored.
+        scene_name (str): The scene folder name.
+    
+    Returns:
+        List[np.ndarray]: List of 4x4 camera pose matrices.
+    """
+    poses_dir = Path(poses_root) / scene_name
+    if not poses_dir.exists(): raise FileNotFoundError(f"Poses directory {poses_dir} not found.")
+    
+    # assumes files with a .txt extension, sorted alphanumerically:
+    pose_files = sorted(poses_dir.glob("*.txt"))
+    camera_poses = []
+    for pose_file in pose_files:
+        pose = np.loadtxt(pose_file)
+        if pose.shape != (4, 4):
+            raise ValueError(f"Pose file {pose_file} does not have shape (4,4); got shape {pose.shape}")
+        camera_poses.append(pose)
+    return camera_poses
+
+def extract_camera_poses(scene_name, sens_file):
+    """
+    Extract camera poses from a .sens file by first exporting them using SensorData,
+    then loading the exported text files.
     
     The ScanNet .sens file contains the camera trajectory (and more). We can extract a list of 4x4 
     extrinsic matrices (transformation from world to camera coordinates).
@@ -231,15 +262,30 @@ def extract_camera_poses(sens_file):
         List[np.ndarray]: A list of 4x4 numpy arrays representing camera extrinsic matrices.
     """
 
+    sd = SensorData(sens_file)
+    sd.export_poses(os.path.join('poses/', scene_name))
+    
+    # adjust to large storage space
+    poses_root = os.path.expanduser("~/marcos/advdlcvp/poses")
+    poses_dir = Path(poses_root) / scene_name
 
-
-
-def ego_slice(path_to_scene, path_to_sens_file):    
-    # Ensure the output directory exists
+    # if the poses directory does not exist, export the poses from the .sens file.
+    if not poses_dir.exists():
+        print(f"Poses for scene {scene_name} not found at {poses_dir}. Exporting from {sens_file}...")
+        sd = SensorData(sens_file)
+        # export pose text files into the given directory.
+        # (Assumes SensorData.export_poses writes files named 0.txt, 1.txt, etc.)
+        sd.export_poses(str(poses_dir))
+    
+    # Now load the poses from the text files
+    return load_camera_poses(poses_root, scene_name)
+    
+def ego_slice(scene_name, path_to_scene, path_to_sens_file):    
+    # ensure the output directory exists
     processed_dir = Path("data/processed")
     processed_dir.mkdir(parents=True, exist_ok=True)
     
-    # Load the .npy files containing point cloud data.
+    # load the .npy files containing point cloud data.
     coords = np.load(Path(path_to_scene) / "coord.npy")
     colors = np.load(Path(path_to_scene) / "color.npy")
     instances = np.load(Path(path_to_scene) / "instance.npy")
@@ -247,19 +293,18 @@ def ego_slice(path_to_scene, path_to_sens_file):
     segment20 = np.load(Path(path_to_scene) / "segment20.npy")
     segment200 = np.load(Path(path_to_scene) / "segment200.npy")
     
-    # For visualization, scale colors to 0-1 range.
+    # for visualization, scale colors to 0-1 range.
     colors_vis = colors / 255.0
     
-    # Create and save the original point cloud (using scaled colors for display)
+    # create and save the original point cloud (using scaled colors for display)
     original_pcd = o3d.geometry.PointCloud()
     original_pcd.points = o3d.utility.Vector3dVector(coords)
     original_pcd.colors = o3d.utility.Vector3dVector(colors_vis)
     original_pcd.normals = o3d.utility.Vector3dVector(normals)
     o3d.io.write_point_cloud(str(processed_dir / "original_point_cloud.ply"), original_pcd)
     
-    # Determine the .sens file path.
-    # This example assumes that the .sens file is named after the scene folder.
-    if path_to_sens_file.exists(): camera_poses = extract_camera_poses(path_to_sens_file)
+    # determine the .sens file path.
+    if path_to_sens_file.exists(): camera_poses = extract_camera_poses(scene_name, path_to_sens_file)
     else:
         print(f"[ERROR] Sens file {path_to_sens_file} not found. Using default camera pose.")
         pose1 = np.eye(4)
@@ -267,20 +312,21 @@ def ego_slice(path_to_scene, path_to_sens_file):
         pose2[:3, 3] = np.array([0.5, 0.0, 0.0])  # sample shift in x-direction
         camera_poses = [pose1, pose2]
     
-    # Define the camera position and angular parameters for slicing.
+    # define the camera position and angular parameters for slicing.
     # camera_pos = np.array([1.0, 0.3, 0.6]) # testing
     phi = 90         # Angle on the xy-plane (degrees)
     theta = 90       # Angle from vertical (degrees)
     dubleAlpha = 130 # Horizontal field of view (degrees)
     dubleBeta = 150  # Vertical field of view (degrees)
     
-    # # Perform slicing: filter the raw point cloud arrays based on view angles.
+    # # perform slicing: filter the raw point cloud arrays based on view angles.
     # filtered_coords, filtered_colors, filtered_instances, filtered_normals, filtered_segment20, filtered_segment200 = cut_point_cloud_npy(
     #     coords, colors, instances, normals, segment20, segment200,
     #     camera_pos, phi, theta, dubleAlpha, dubleBeta
     # )
     
-    # Loop over every camera pose and slice the point cloud accordingly.
+    
+    # loop over every camera pose and slice the point cloud accordingly.
     for i, pose in enumerate(camera_poses):
         camera_pos = pose[:3, 3]  # extract the translation (camera position)
         (filtered_coords, filtered_colors, filtered_instances,
@@ -311,6 +357,8 @@ if __name__ == "__main__":
     we assert some sanity checks nonetheless.
     """
     
+    
+    
     scene_name = 'scene0704_01' # Scene must be in validation set
     
     # confirm path to preprocessed scene exists
@@ -321,7 +369,7 @@ if __name__ == "__main__":
     path_to_sens_file = Path(f'/dtu/datasets2/ScanNet/ScanNetV2/scans/{scene_name}/{scene_name}.sens')
     assert path_to_sens_file.exists(), f'Path to sens file ({path_to_sens_file}) does not exist'
     
-    ego_slice(path_to_scene, path_to_sens_file)
+    ego_slice(scene_name, path_to_scene, path_to_sens_file)
     
     # /dtu/datasets2/ScanNet/ScanNetV2/scans/scene0236_01
     
