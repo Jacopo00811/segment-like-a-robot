@@ -7,6 +7,15 @@ import os
 
 from sens_reader.SensorData import SensorData
 
+PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/ego_sliced/') # Ego-sliced processed scenes storage
+PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/')
+RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
+
+# Testing
+# PROCESSED_OUTPUT_DIR = Path('data/processed') # Ego-sliced processed scenes storage
+# PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/')
+# RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
+
 class MyDataset(Dataset):
     """My custom dataset."""
 
@@ -262,11 +271,11 @@ def extract_camera_poses(scene_name, sens_file):
         List[np.ndarray]: A list of 4x4 numpy arrays representing camera extrinsic matrices.
     """
 
-    sd = SensorData(sens_file)
-    sd.export_poses(os.path.join('poses/', scene_name))
+    # sd = SensorData(sens_file)
+    # sd.export_poses(os.path.join('poses/', scene_name))
     
     # adjust to large storage space
-    poses_root = os.path.expanduser("~/marcos/advdlcvp/poses")
+    poses_root = os.path.join(PROCESSED_OUTPUT_DIR, "poses")
     poses_dir = Path(poses_root) / scene_name
 
     # if the poses directory does not exist, export the poses from the .sens file.
@@ -282,8 +291,7 @@ def extract_camera_poses(scene_name, sens_file):
     
 def ego_slice(scene_name, path_to_scene, path_to_sens_file):    
     # ensure the output directory exists
-    processed_dir = Path("data/processed")
-    processed_dir.mkdir(parents=True, exist_ok=True)
+    PROCESSED_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
     # load the .npy files containing point cloud data.
     coords = np.load(Path(path_to_scene) / "coord.npy")
@@ -301,7 +309,7 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
     original_pcd.points = o3d.utility.Vector3dVector(coords)
     original_pcd.colors = o3d.utility.Vector3dVector(colors_vis)
     original_pcd.normals = o3d.utility.Vector3dVector(normals)
-    o3d.io.write_point_cloud(str(processed_dir / "original_point_cloud.ply"), original_pcd)
+    # o3d.io.write_point_cloud(str(PROCESSED_OUTPUT_DIR / "original_point_cloud.ply"), original_pcd)
     
     # determine the .sens file path.
     if path_to_sens_file.exists(): camera_poses = extract_camera_poses(scene_name, path_to_sens_file)
@@ -338,11 +346,15 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
         filtered_pcd.points = o3d.utility.Vector3dVector(filtered_coords)
         filtered_pcd.colors = o3d.utility.Vector3dVector(filtered_colors)
         filtered_pcd.normals = o3d.utility.Vector3dVector(filtered_normals)
-        out_filename = processed_dir / f"filtered_point_cloud_slice_{i:03d}.ply"
+        
+        out_dir = PROCESSED_OUTPUT_DIR / scene_name
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_filename = out_dir / f"filtered_point_cloud_slice_{i:03d}.ply"
+        
         o3d.io.write_point_cloud(str(out_filename), filtered_pcd)
-        print(f"Slice {i} saved to {out_filename}")
+        # print(f"Slice {i} saved to {out_filename}")
     
-    print("Slicing complete. Original and filtered point clouds have been saved.")
+    print("Slicing complete. Filtered point cloud have been saved.")
 
 if __name__ == "__main__":
     
@@ -355,21 +367,46 @@ if __name__ == "__main__":
     
     The validation scene set should be a subset of the raw scenes, so no errors should I arise,
     we assert some sanity checks nonetheless.
+    
+    We store the ego-sliced processed scenes in PROCESSED_OUTPUT_DIR
     """
     
+    # loop over each scene directory in the preprocessed validation folder
+    # ignore sub directories
+    for scene_dir in PREPROCESSED_BASE_DIR.iterdir():
+        if scene_dir.is_dir():
+            scene_name = scene_dir.name
+            print(f"Processing scene: {scene_name}")
+            
+            # construct the path to the .sens file for that scene from the raw scans folder
+            path_to_sens_file = RAW_SCANS_BASE_DIR / scene_name / f"{scene_name}.sens"
+            
+            # check if the constructed .sens file exists
+            if not path_to_sens_file.exists():
+                print(f"[WARNING] Sens file for scene {scene_name} not found at {path_to_sens_file}. Skipping.")
+                continue
+            
+            ego_slice(scene_name, scene_dir, path_to_sens_file)
+    
+    print("All scenes have been processed.")
     
     
-    scene_name = 'scene0704_01' # Scene must be in validation set
+    ######## RUN Ego-slicing for 1 scene ########
+    # scene_name = 'scene0704_01' # Scene must be in validation set
     
-    # confirm path to preprocessed scene exists
-    path_to_scene = Path(f'/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/{scene_name}') # TODO: We should export this to an environment variable or config
-    assert path_to_scene.exists(), f'Path to scene ({path_to_scene}) does not exist'
+    # # confirm path to preprocessed scene exists
+    # path_to_scene = Path(f'/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/{scene_name}') # TODO: We should export this to an environment variable or config
+    # assert path_to_scene.exists(), f'Path to scene ({path_to_scene}) does not exist'
     
-    # confirm path to .sens file exist
-    path_to_sens_file = Path(f'/dtu/datasets2/ScanNet/ScanNetV2/scans/{scene_name}/{scene_name}.sens')
-    assert path_to_sens_file.exists(), f'Path to sens file ({path_to_sens_file}) does not exist'
+    # # confirm path to .sens file exist
+    # path_to_sens_file = Path(f'/dtu/datasets2/ScanNet/ScanNetV2/scans/{scene_name}/{scene_name}.sens')
+    # assert path_to_sens_file.exists(), f'Path to sens file ({path_to_sens_file}) does not exist'
     
-    ego_slice(scene_name, path_to_scene, path_to_sens_file)
+    # ego_slice(scene_name, path_to_scene, path_to_sens_file)
+    ###############################################
+    
+    
+    
     
     # /dtu/datasets2/ScanNet/ScanNetV2/scans/scene0236_01
     
