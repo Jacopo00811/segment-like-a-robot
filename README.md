@@ -57,8 +57,8 @@ started with Machine Learning Operations (MLOps).
 ## Mask3D
 ### Project set-up
 - Create conda environment: conda create -n ENVNAME python=3.10.9
-- Downgrade pip to 23.3: python -m pip install --force-reinstall pip==23.3
 - activate environment
+- Downgrade pip to 23.3: python -m pip install --force-reinstall pip==23.3
 - pip install numpy
 - pip install "cython<3.0.0" && pip install --no-build-isolation pyyaml==5.4.1
 - conda install -c conda-forge pycocotools==2.0.4
@@ -120,6 +120,11 @@ cd ../../Pointcept/libs/pointgroup_ops/
 export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6"
 uv pip install --no-build-isolation .
 
+8. Install flash attention:
+uv pip install flash-attn --no-build-isolation
+
+
+##############################################
 
 # Development (Only for developers of the project)
 Blackhole location of data in DTU HPC cluster (read-only)
