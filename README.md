@@ -122,3 +122,84 @@ uv pip install --no-build-isolation .
 
 8. Install flash attention:
 uv pip install flash-attn --no-build-isolation
+
+
+##############################################
+
+# Development (Only for developers of the project)
+Blackhole location of data in DTU HPC cluster (read-only)
+/dtu/blackhole/0e/169006/ScanNet
+
+
+# Development (Only for developers of the project)
+Blackhole location of data in DTU HPC cluster (read-only)
+```
+/dtu/blackhole/0e/169006/ScanNet
+```
+
+Pointcept pre-processed validation dataset
+```
+/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/
+```
+
+Inside the path there's scenes like scene0356_01. Inside the scenes there's folders called 
+```
+color.npy  coord.npy  instance.npy  normal.npy  segment200.npy  segment20.npy
+```
+
+Ego-centric slices of these scenes are stored in the folder
+```
+/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/slices/
+```
+The slices are stored in folders like scene0356_01_0, scene0356_01_1, etc.
+The slices are stored in the format
+```
+color.npy  coord.npy  instance.npy  normal.npy  segment200.npy  segment20.npy
+```
+
+
+
+Marcos' stuff (delete later)
+
+python src/ego_3d/sens_reader/reader.py --filename /dtu/datasets2/ScanNet/ScanNetV2/scans/scene0704_01/scene0704_01.sens --output_path ~/marcos/advdlcvp/poses/ --export_poses
+
+uv venv --python 3.11.9
+source .venv/bin/activate
+cd advdlcvp
+uv sync --active
+git submodule init
+git submodule update
+echo 'export CUDA_HOME=/appl/cuda/12.4.0' >> ~/.bashrc
+uv pip install --no-build-isolation torch==2.5.1  torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+uv pip install --no-build-isolation -e ./Pointcept
+source ~/.bashrc
+export CUDA_HOME=/appl/cuda/12.4.0
+export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;9.0"
+uv pip install --no-build-isolation ./Pointcept/libs/pointops
+cd externals 
+git clone https://github.com/sparsehash/sparsehash.git
+cd sparsehash
+./configure --prefix=$HOME/.local
+make
+make install
+export CPLUS_INCLUDE_PATH=$HOME/.local/include:$CPLUS_INCLUDE_PATH
+cd ../../Pointcept/libs/pointgroup_ops/
+export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6"
+uv pip install --no-build-isolation .
+
+
+uv venv --python 3.11.9
+source .venv/bin/activate
+uv sync
+uv pip install --no-build-isolation torch==2.5.1  torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+uv pip install --no-build-isolation -e ./Pointcept
+uv pip install --no-build-isolation ./Pointcept/libs/pointops
+cd ../../Pointcept/libs/pointgroup_ops/
+export TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6"
+uv pip install --no-build-isolation .
+uv pip install --no-build-isolation flash_attn 
+
+
+
+
+python src/ego_3d/sens_reader/reader.py --filename /dtu/datasets2/ScanNet/ScanNetV2/scans/scene0179_00/scene0179_00.sens --output_path ~/marcos/advdlcvp/poses/ --export_poses
