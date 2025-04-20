@@ -4,12 +4,14 @@ import numpy as np
 import open3d as o3d
 from torch.utils.data import Dataset
 import os 
+from tqdm import tqdm
 
 from sens_reader.SensorData import SensorData
 
-PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/ego_sliced/') # Ego-sliced processed scenes storage
+PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/val/') # Ego-sliced processed scenes storage
 PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/')
 RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
+RAW_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/raw/val/')
 
 # Testing
 # PROCESSED_OUTPUT_DIR = Path('data/processed') # Ego-sliced processed scenes storage
@@ -342,22 +344,36 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
             coords, colors, instances, normals, segment20, segment200,
             camera_pos, phi, theta, dubleAlpha, dubleBeta
         )
-        filtered_pcd = o3d.geometry.PointCloud()
-        filtered_pcd.points = o3d.utility.Vector3dVector(filtered_coords)
-        filtered_pcd.colors = o3d.utility.Vector3dVector(filtered_colors)
-        filtered_pcd.normals = o3d.utility.Vector3dVector(filtered_normals)
+
+        # saving raw
+        # filtered_pcd = o3d.geometry.PointCloud()
+        # filtered_pcd.points = o3d.utility.Vector3dVector(filtered_coords)
+        # filtered_pcd.colors = o3d.utility.Vector3dVector(filtered_colors)
+        # filtered_pcd.normals = o3d.utility.Vector3dVector(filtered_normals)
         
-        out_dir = PROCESSED_OUTPUT_DIR / scene_name
-        out_dir.mkdir(parents=True, exist_ok=True)
-        out_filename = out_dir / f"filtered_point_cloud_slice_{i:03d}.ply"
-        
-        o3d.io.write_point_cloud(str(out_filename), filtered_pcd)
+        # out_dir = RAW_OUTPUT_DIR / scene_name
+        # out_dir.mkdir(parents=True, exist_ok=True)
+        # out_filename = out_dir / f"filtered_point_cloud_slice_{i:03d}.ply"
+        # o3d.io.write_point_cloud(str(out_filename), filtered_pcd)
+
+        # Saving Preprocessed
+        processed_out_dir = PROCESSED_OUTPUT_DIR / scene_name / f"filtered_point_cloud_slice_{i:03d}"
+        processed_out_dir.mkdir(parents=True, exist_ok=True)
+        np.save(os.path.join(str(processed_out_dir), "coord.npy"), filtered_coords)
+        np.save(os.path.join(str(processed_out_dir), "color.npy"), filtered_colors)
+        np.save(os.path.join(str(processed_out_dir), "instance.npy"), filtered_instances)
+        np.save(os.path.join(str(processed_out_dir), "normal.npy"), filtered_normals)
+        np.save(os.path.join(str(processed_out_dir), "segment20.npy"), filtered_segment20)
+        np.save(os.path.join(str(processed_out_dir), "segment200.npy"), filtered_segment200)
+
         # print(f"Slice {i} saved to {out_filename}")
     
     print("Slicing complete. Filtered point cloud have been saved.")
 
 if __name__ == "__main__":
     
+    print(PROCESSED_OUTPUT_DIR)
+    print(RAW_OUTPUT_DIR)
     
     """
     We will only use the validation scene/scan set for now. The preprocessed data
@@ -373,7 +389,7 @@ if __name__ == "__main__":
     
     # loop over each scene directory in the preprocessed validation folder
     # ignore sub directories
-    for scene_dir in PREPROCESSED_BASE_DIR.iterdir():
+    for scene_dir in tqdm(PREPROCESSED_BASE_DIR.iterdir()):
         if scene_dir.is_dir():
             scene_name = scene_dir.name
             print(f"Processing scene: {scene_name}")
