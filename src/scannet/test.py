@@ -17,7 +17,7 @@ def main_worker(cfg):
 
 
     test_cfg = dict(cfg=cfg, **cfg.test)
-    cfg.test.dataset_root = DATASET_ROOT
+    # cfg.test.dataset_root = DATASET_ROOT
     cfg.data.test.dataset_root = DATASET_ROOT
     cfg.data.val.dataset_root = DATASET_ROOT
 
