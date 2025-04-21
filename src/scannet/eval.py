@@ -16,6 +16,7 @@ from pointcept.models import build_model
 def build_val_loader(cfg):
 
     val_loader = None
+    print(cfg.data.keys())
 
     val_data = build_dataset(cfg.data.val)
 
@@ -102,4 +103,6 @@ if __name__ == "__main__":
     # Load the weights
     model.load_state_dict(backbone_state_dict, strict=False)
     print(f"Loaded model weights from {weights_path}")
+
+
 
