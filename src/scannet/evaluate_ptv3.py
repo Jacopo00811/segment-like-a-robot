@@ -110,7 +110,7 @@ all_scene_metrics = {}
 
 
 # Run inference test on entire validation set
-with torch.no_grad:
+with torch.no_grad():
     for batch_idx, input_dict in enumerate(tqdm(dataloader, desc="Processing Scenes")):
 
         if batch_idx > 2:
