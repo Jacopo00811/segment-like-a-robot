@@ -111,7 +111,6 @@ test_transform = [
     {'name': 'ToTensor'},
 ]
 
-# Create the test dataset with proper transformations
 test_dataset = ScanNetDataset(
     split='val',
     data_root=DATASET_ROOT,
@@ -128,10 +127,10 @@ test_dataset = ScanNetDataset(
         ),
         crop=None,
         post_transform=[
-            dict(name='ToTensor'),
+            dict(type='ToTensor'),
         ],
         aug_transform=[
-            [dict(name='RandomFlip', p=0.0)],  # No-op in test mode
+            [dict(type='RandomFlip', p=0.0)],  # No-op in test mode
         ]
     ),
     loop=1
