@@ -44,7 +44,7 @@ def eval(cfg, model, val_loader):
 
     for idx, input_dict in enumerate(tqdm(val_loader, desc="Processing Scenes")):
         
-        if idx > 2:
+        if idx > 1:
             break
 
         for key in input_dict.keys():
