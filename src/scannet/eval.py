@@ -45,7 +45,7 @@ def eval(cfg, model, val_loader):
 
     target_scene = ""
 
-    for idx, input_dict in enumerate(tqdm(val_loader, desc="Processing Scenes")):
+    for idx, input_dict in enumerate(val_loader):
 
         print("Current scene: ", val_loader.dataset.get_data_name(idx))
 
