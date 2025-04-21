@@ -1,6 +1,6 @@
 import torch
 from pointcept.datasets.scannet import ScanNetDataset
-from pointcept.datasets.utils import collate_fn
+from ego_3d.dataset import single_sample_collate_fn
 from pointcept.models.point_transformer_v3.point_transformer_v3m1_base import PointTransformerV3
 import os
 from importlib.util import spec_from_file_location, module_from_spec
@@ -93,7 +93,7 @@ dataloader = torch.utils.data.DataLoader(
         pin_memory=True,
         drop_last=False,
         persistent_workers=True,
-        collate_fn=collate_fn,
+        collate_fn=single_sample_collate_fn,
     )
 
 
