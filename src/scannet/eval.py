@@ -53,6 +53,7 @@ def eval(cfg, model, val_loader):
         with torch.no_grad():
             output_dict = model(input_dict)
         
+        print("output_dict: ", output_dict.keys())
         output = output_dict["seg_logits"]
         loss = output_dict["loss"]
         pred = output.max(1)[1]
