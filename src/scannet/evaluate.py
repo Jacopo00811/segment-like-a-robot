@@ -75,8 +75,6 @@ DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 
 
 config = load_config_from_file(config_path)
-config.dataset_config['dataset_root'] = DATASET_ROOT
-config.dataset_config['split'] = "val"
 
 
 model = DefaultSegmentorV2(
