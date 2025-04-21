@@ -105,5 +105,15 @@ if __name__ == "__main__":
     model.load_state_dict(backbone_state_dict, strict=False)
     print(f"Loaded model weights from {weights_path}")
 
+    # Move the model to GPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.to(device)
+    model.eval()
+
+    # evaluate the model
+    eval(cfg, model, val_loader)
+
+    
+
 
 
