@@ -73,6 +73,7 @@ def eval(cfg, model, val_loader):
         elif idx == 1: # Temp for testing
             os.makedirs('reports/scannet/pointcloud', exist_ok=True)
             last_scene_name = val_loader.dataset.get_data_name(idx - 1)
+            print(val_loader.dataset.get_data_name(len(val_loader))
 
             np.save(
                 f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
