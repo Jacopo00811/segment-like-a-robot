@@ -98,7 +98,7 @@ dataloader = torch.utils.data.DataLoader(
         pin_memory=True,
         drop_last=False,
         persistent_workers=True,
-        collate_fn=single_sample_collate_fn,
+        collate_fn=collate_fn,
     )
 
 
