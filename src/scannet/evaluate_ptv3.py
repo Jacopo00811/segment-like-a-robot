@@ -118,14 +118,116 @@ all_scene_metrics = {}
 # Run inference test on entire validation set
 with torch.no_grad():
     for idx, data_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
-         
-        if idx > 2:
-            break
-         
-        data_dict = data_dict[0]  # Get the first (and only) item in the batch
-
+        # Get the first (and only) item in the batch
+        data_dict = data_dict[0]  
+        
+        # Extract scene information
         fragment_list = data_dict.pop("fragment_list")
         segment = data_dict.pop("segment")
+        data_name = data_dict.pop("name")
+        
+        print(f"Processing scene {idx+1}/{len(dataloader)}: {data_name}")
+        
+        # Initialize prediction tensor for the entire scene
+        pred = torch.zeros((segment.size, 20)).to(device)  # 20 classes for ScanNet
+        
+        # Process each fragment
+        for i in range(len(fragment_list)):
+            # Process fragment data
+            input_dict = fragment_list[i]
+            
+            # Convert numpy arrays to tensors and move to device
+            for key in input_dict.keys():
+                if isinstance(input_dict[key], np.ndarray):
+                    input_dict[key] = torch.from_numpy(input_dict[key]).to(device)
+            
+            # Get point indices for this fragment
+            idx_part = input_dict["index"]
+            
+            # Forward pass
+            output = model(input_dict)
+            pred_logits = output["seg_logits"]  # Shape: [N, 20]
+            
+            # Apply softmax to get probabilities
+            pred_part = torch.nn.functional.softmax(pred_logits, dim=1)
+            
+            # Add predictions to the overall scene prediction
+            bs = 0
+            for be in input_dict["offset"]:
+                pred[idx_part[bs:be], :] += pred_part[bs:be]
+                bs = be
+        
+        # Get final class predictions
+        pred_labels = pred.max(1)[1].cpu().numpy()
+        
+        # Store results for this scene
+        all_predictions[data_name] = pred_labels
+        all_segment_ids[data_name] = segment.numpy()
+        
+        # Calculate metrics for this scene
+        intersection, union, target = np.zeros(20), np.zeros(20), np.zeros(20)
+        for i in range(20):
+            intersection[i] = np.sum((pred_labels == i) & (segment.numpy() == i))
+            union[i] = np.sum((pred_labels == i) | (segment.numpy() == i))
+            target[i] = np.sum(segment.numpy() == i)
+        
+        # Calculate IoU scores
+        iou_class = np.zeros(20)
+        for i in range(20):
+            if union[i] == 0:
+                iou_class[i] = float('nan')
+            else:
+                iou_class[i] = intersection[i] / union[i]
+        
+        # Calculate mean IoU, accuracy
+        valid_classes = ~np.isnan(iou_class)
+        mean_iou = np.mean(iou_class[valid_classes])
+        accuracy = np.sum(intersection) / np.sum(target)
+        
+        # Store metrics for this scene
+        all_scene_metrics[data_name] = {
+            'intersection': intersection,
+            'union': union,
+            'target': target,
+            'iou_class': iou_class,
+            'mean_iou': mean_iou,
+            'accuracy': accuracy
+        }
+        
+        print(f"Scene {data_name}: mIoU = {mean_iou:.4f}, Accuracy = {accuracy:.4f}")
+
+# Calculate overall metrics
+total_intersection = np.sum([metrics['intersection'] for metrics in all_scene_metrics.values()], axis=0)
+total_union = np.sum([metrics['union'] for metrics in all_scene_metrics.values()], axis=0)
+total_target = np.sum([metrics['target'] for metrics in all_scene_metrics.values()], axis=0)
+
+# Calculate overall IoU scores
+overall_iou_class = np.zeros(20)
+for i in range(20):
+    if total_union[i] == 0:
+        overall_iou_class[i] = float('nan')
+    else:
+        overall_iou_class[i] = total_intersection[i] / total_union[i]
+
+# Calculate overall mean IoU, accuracy
+valid_classes = ~np.isnan(overall_iou_class)
+overall_mean_iou = np.mean(overall_iou_class[valid_classes])
+overall_accuracy = np.sum(total_intersection) / np.sum(total_target)
+
+print("\nOverall Results:")
+print(f"Mean IoU: {overall_mean_iou:.4f}")
+print(f"Accuracy: {overall_accuracy:.4f}")
+
+# Print per-class IoU
+class_names = [
+    "wall", "floor", "cabinet", "bed", "chair", "sofa", "table", "door", 
+    "window", "bookshelf", "picture", "counter", "desk", "curtain", 
+    "refrigerator", "shower curtain", "toilet", "sink", "bathtub", "otherfurniture"
+]
+
+print("\nPer-Class IoU:")
+for i in range(20):
+    print(f"Class {i} - {class_names[i]}: {overall_iou_class[i]:.4f}")
 
 
        
