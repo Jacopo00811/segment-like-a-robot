@@ -20,7 +20,7 @@ def build_val_loader(cfg):
 
     val_loader = None
 
-    val_data = build_dataset(cfg.data.test)
+    val_data = build_dataset(cfg.data.val)
     
     val_sampler = None
 
@@ -141,6 +141,7 @@ if __name__ == "__main__":
 
     cfg.data_root = DATASET_ROOT
     cfg.data.test.data_root = DATASET_ROOT
+    cfg.data.val.data_root = DATASET_ROOT
 
     val_loader = build_val_loader(cfg)
     
