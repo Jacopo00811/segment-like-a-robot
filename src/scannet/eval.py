@@ -28,7 +28,7 @@ def build_val_loader(cfg):
         val_data,
         batch_size=1,
         shuffle=False,
-        num_workers=4,
+        num_workers=1,
         pin_memory=True,
         sampler=val_sampler,
         collate_fn=collate_fn,
@@ -45,7 +45,7 @@ def eval(cfg, model, val_loader):
 
     target_scene = ""
     print(val_loader)
-    for idx, input_dict in enumerate(val_loader):
+    for idx, input_dict in enumerate(tqdm(val_loader, desc="Evaluating scenes")):
 
         print("Current scene: ", val_loader.dataset.get_data_name(idx))
 
