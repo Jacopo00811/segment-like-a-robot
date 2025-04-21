@@ -134,7 +134,7 @@ def load_config_from_file(config_path):
 if __name__ == "__main__":
 
     cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
-    weights_path = "./models/model_best_PointTransformer_V3.pth"
+    weights_path = "./models/PointTransformer_V3/model_best.pth"
     DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 
     cfg = default_config_parser(cfg_path, None)
