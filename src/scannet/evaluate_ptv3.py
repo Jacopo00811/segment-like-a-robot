@@ -120,10 +120,7 @@ all_scene_metrics = {}
 with torch.no_grad():
     for idx, data_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
 
-        print(data_dict)
-
-        # Get the first (and only) item in the batch
-        data_dict = data_dict[0]  
+        print(data_dict) 
         
         # Extract scene information
         fragment_list = data_dict.pop("fragment_list")
