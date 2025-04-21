@@ -73,7 +73,6 @@ def eval(cfg, model, val_loader):
         elif idx == 1: # Temp for testing
             os.makedirs('reports/scannet/pointcloud', exist_ok=True)
             last_scene_name = val_loader.dataset.get_data_name(idx - 1)
-            print(val_loader.dataset.get_data_name(0))
 
             np.save(
                 f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
@@ -137,7 +136,7 @@ if __name__ == "__main__":
 
     # visualize the model
     visualize_scene(
-        scene_folder="val/scene0011_01",
+        scene_folder="val/scene0019_00",
         prediction_path="reports/scannet/pointcloud/scene0011_01_pred.npy",
         data_root=DATASET_ROOT
     )
