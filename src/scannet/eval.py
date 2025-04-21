@@ -61,7 +61,7 @@ def eval(cfg, model, val_loader):
         
         if idx == len(val_loader) - 1:
             os.makedirs('reports/scannet/pointcloud', exist_ok=True)
-            last_scene_name = input_dict["scene_name"]
+            last_scene_name = val_loader.dataset.get_data_name(idx)
 
             np.save(
                 f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
@@ -70,7 +70,7 @@ def eval(cfg, model, val_loader):
             print(f"\nSaved predictions for the last scene: {last_scene_name}")
         elif idx == 1: # Temp for testing
             os.makedirs('reports/scannet/pointcloud', exist_ok=True)
-            last_scene_name = input_dict["scene_name"]
+            last_scene_name = val_loader.dataset.get_data_name(idx)
 
             np.save(
                 f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
