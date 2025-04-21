@@ -54,11 +54,12 @@ def eval(cfg, model, val_loader):
         with torch.no_grad():
             output_dict = model(input_dict)
         
-        print("output_dict: ", output_dict.keys())
-        print("input_dict: ", input_dict.keys())
+        print(f"Input shape: {input_dict['coord'].shape}")
         output = output_dict["seg_logits"]
         loss = output_dict["loss"]
         pred = output.max(1)[1]
+        print(f"Output shape: {pred.shape}")
+        print(f"GT shape: {input_dict['seg_label'].shape}")
         
         if idx == len(val_loader) - 1:
             os.makedirs('reports/scannet/pointcloud', exist_ok=True)

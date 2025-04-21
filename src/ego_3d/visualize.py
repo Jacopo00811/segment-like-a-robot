@@ -170,7 +170,7 @@ def visualize_scene(scene_folder, prediction_path=None, data_root=data_path):
     predictions = np.load(prediction_path)
 
     print(f"coords shape: {coords.shape}")
-    print(f"predsictions shape: {predictions.shape}")
+    print(f"predictions shape: {predictions.shape}")
     print(f"gt_labels shape: {gt_labels.shape}")
 
     fig = plt.figure(figsize=(18, 6))
