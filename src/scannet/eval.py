@@ -9,6 +9,7 @@ from sklearn.metrics import confusion_matrix
 from pointcept.datasets.scannet import ScanNetDataset
 from pointcept.datasets import build_dataset, point_collate_fn, collate_fn
 from pointcept.models import build_model
+from pointcept.engines.defaults import default_config_parser
 
 
 
@@ -17,7 +18,7 @@ def build_val_loader(cfg):
 
     val_loader = None
 
-    val_data = build_dataset(cfg.data['val'])
+    val_data = build_dataset(cfg.data.val)
 
     val_sampler = None # None for now
 
@@ -77,7 +78,7 @@ if __name__ == "__main__":
     weights_path = "./models/model_best_PointTransformer_V3.pth"
     DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 
-    cfg = load_config_from_file(cfg_path)
+    cfg = default_config_parser(cfg_path, None)
 
     cfg.data_root = DATASET_ROOT
 
