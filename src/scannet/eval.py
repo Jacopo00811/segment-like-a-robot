@@ -17,7 +17,7 @@ def build_val_loader(cfg):
 
     val_loader = None
 
-    val_data = build_dataset(cfg.data.val)
+    val_data = build_dataset(cfg.data['val'])
 
     val_sampler = None # None for now
 
