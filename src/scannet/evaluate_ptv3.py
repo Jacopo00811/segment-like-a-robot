@@ -115,6 +115,9 @@ all_scene_metrics = {}
 with torch.no_grad():
     for batch_idx, input_dict in enumerate(tqdm(dataloader, desc="Processing Scenes")):
 
+        print(f"Input dict: {input_dict}")
+        # Check if input_dict is empty
+
         if batch_idx > 2:
             break
 
