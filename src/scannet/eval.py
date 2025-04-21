@@ -75,8 +75,8 @@ def eval(cfg, model, val_loader):
         intersection, union, target = intersection_and_union_gpu(
             pred,
             segment,
-            num_classes=cfg.data.num_classes,
-            ignore_index=cfg.data.ignore_index,
+            cfg.data.num_classes,
+            cfg.data.ignore_index,
 
         )
 
