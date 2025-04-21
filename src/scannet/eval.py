@@ -33,7 +33,7 @@ def build_val_loader(cfg):
 
     return val_loader
 
-def build_model(cfg):
+def build_mod(cfg):
     model = build_model(cfg.model)
     model.eval()
     return model
@@ -83,7 +83,7 @@ if __name__ == "__main__":
 
     val_loader = build_val_loader(cfg)
 
-    model = build_model(cfg)
+    model = build_mod(cfg)
 
     checkpoint = torch.load(weights_path, map_location="cpu", weights_only=False)
 
