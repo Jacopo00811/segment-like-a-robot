@@ -113,14 +113,7 @@ all_scene_metrics = {}
 
 # Run inference test on entire validation set
 with torch.no_grad():
-    for batch_idx, input_dict in enumerate(tqdm(dataloader, desc="Processing Scenes")):
-
-        print(f"Input dict: {input_dict}")
-        # Check if input_dict is empty
-
-        if batch_idx > 2:
-            break
-
+    for batch_idx, input_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
         # Move input data to device
         for key in input_dict:
             if isinstance(input_dict[key], torch.Tensor):
@@ -167,6 +160,6 @@ with torch.no_grad():
 if all_scene_metrics:
     accuracies = [metrics["accuracy"] for metrics in all_scene_metrics.values()]
     mean_accuracy = np.mean(accuracies)
-    print(f"Mean scene accuracy: {mean_accuracy:.4f}")
-print(f"Processed {len(all_predictions)} scenes")
+    print(f"Mean slice accuracy: {mean_accuracy:.4f}")
 
+print(f"Processed {len(all_predictions)} scenes")
