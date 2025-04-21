@@ -11,7 +11,8 @@ from pointcept.datasets import build_dataset, point_collate_fn, collate_fn
 from pointcept.models import build_model
 from pointcept.engines.defaults import default_config_parser
 from ego_3d.visualize import visualize_scene
-
+import pointops
+from pointcept.utils.misc import intersection_and_union_gpu
 
 
 
@@ -58,6 +59,43 @@ def eval(cfg, model, val_loader):
         output = output_dict["seg_logits"]
         loss = output_dict["loss"]
         pred = output.max(1)[1]
+
+        segement = input_dict["segment"]
+        if "origin_coord" in input_dict.keys():
+            i, _ = pointops.knn_query(
+                1,
+                input_dict["coord"].float(),
+                input_dict["offset"].int(),
+                input_dict["origin_coord"].float(),
+                input_dict["origin_offset"].int(),
+            )
+            pred = pred[idx.flatten().long()]
+            segment = input_dict["origin_segment"]
+
+        intersection, union, target = intersection_and_union_gpu(
+            pred,
+            segment,
+            num_classes=cfg.model.num_classes,
+            ignore_index=cfg.model.ignore_index,
+
+        )
+
+        intersection = intersection.cpu().numpy()
+        union = union.cpu().numpy()
+        target = target.cpu().numpy()
+
+        iou_class = intersection / (union + 1e-10)
+        acc_class = intersection / (target + 1e-10)
+        m_iou = np.mean(iou_class)
+        m_acc = np.mean(acc_class)
+        all_acc = sum(intersection) / (sum(target) + 1e-10)
+        print(f"mIoU: {m_iou:.4f}, mAcc: {m_acc:.4f}, allAcc: {all_acc:.4f}")
+
+
+
+
+
+
         print(f"Output shape: {pred.shape}")
         print(f"GT shape: {input_dict['segment'].shape}")
         
