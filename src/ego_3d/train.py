@@ -137,6 +137,16 @@ with torch.no_grad():
         seg_logits = outputs['seg_logits']
         seg_pred = seg_logits.argmax(dim=1)  # Get class predictions [N]
         
+        # Save prediction for the last slice
+        if batch_idx == len(dataloader_val) - 1:
+            # Create directory if it doesn't exist
+            os.makedirs('reports/pointcloud', exist_ok=True)
+            # Get slice name
+            last_slice_name = sample_name
+            # Save prediction
+            np.save(f'reports/pointcloud/{last_slice_name}_pred.npy', seg_pred.cpu().numpy())
+            print(f"\nSaved prediction for {last_slice_name} to reports/pointcloud/{last_slice_name}_pred.npy")
+        
         all_predictions.append(seg_pred.cpu())
         all_targets.append(input_dict['segment'].cpu())
             
