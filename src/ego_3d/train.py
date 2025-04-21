@@ -1,22 +1,9 @@
-# from ego_3d.model import Model
-# from ego_3d.data import MyDataset
-
-# def train():
-#     dataset = MyDataset("data.processed")
-#     model = Model()
-#     # add rest of your training code here
-
-# if __name__ == "__main__":
-#     train()
-
 import torch
-from pointcept.datasets import dataloader
 from pointcept.models.point_transformer_v3.point_transformer_v3m1_base import PointTransformerV3
 import os
 from importlib.util import spec_from_file_location, module_from_spec
 from dataset import EgoSlicedScanNetDataset, single_sample_collate_fn
 from tqdm import tqdm
-import numpy as np
 
 def load_config_from_file(config_path):
     
@@ -26,7 +13,6 @@ def load_config_from_file(config_path):
     spec.loader.exec_module(config_module)
     
     return config_module
-
 
 def load_weights(model, weights_path):
     checkpoint = torch.load(weights_path, map_location='cpu', weights_only=False)
@@ -42,12 +28,11 @@ def load_weights(model, weights_path):
     return model
 
 
-
 config_path = "/zhome/f9/0/168881/Desktop/segment-like-a-robot/Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
 weights_path = "models/model_best_PointTransformer_V3.pth"
+data_path = "/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed"
 
 config_module = load_config_from_file(config_path)
-
 model_config = config_module.model["backbone"]
 model = PointTransformerV3(
     in_channels=model_config["in_channels"],
@@ -81,93 +66,42 @@ model = PointTransformerV3(
     pdnorm_affine=model_config["pdnorm_affine"],
     pdnorm_conditions=model_config["pdnorm_conditions"],
 )
-
 model = load_weights(model, weights_path)
-model.eval()
-
-
-
-PATH = "/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed"
 
 dataset = EgoSlicedScanNetDataset(
     split="val",
-    data_root=PATH,
-    slice_sampling=1
+    data_root=data_path,
+    slice_sampling=100,
+    filter_slices=True,  # Enable built-in filtering
+    min_size_threshold=0.15  # Filter out slices smaller than 15% of scene average
 )
-
-dataloader_all = torch.utils.data.DataLoader(
+dataloader_val = torch.utils.data.DataLoader(
         dataset,
         batch_size=1,
         shuffle=False,
         num_workers=4,
-        collate_fn=single_sample_collate_fn,  # Use our custom collate function
+        collate_fn=single_sample_collate_fn,  # Use the custom collate function
         pin_memory=True,
         drop_last=False,
         persistent_workers=True,
     )
-
-
-
-
-# Move model to GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
 model.eval()
 
-# Create dictionaries to store results
-all_predictions = {}
-all_segment_ids = {}
-all_confidences = {}
-all_scene_metrics = {}
+
 # Run inference
 with torch.no_grad():
-    for batch_idx, input_dict in enumerate(tqdm(dataloader_all, desc="Processing slices")):
+    for batch_idx, input_dict in enumerate(tqdm(dataloader_val, desc="Processing slices")):
         # Move input data to device
         for key in input_dict:
             if isinstance(input_dict[key], torch.Tensor):
                 input_dict[key] = input_dict[key].to(device)
         
-        # Get sample name
+        # Get sample name directly from dataset
         sample_name = dataset.get_data_name(batch_idx)
         
         # Forward pass
+        print(f"Keys before: {input_dict.keys()}")
         outputs = model(input_dict)
-        
-        # Process predictions - no need to index with [i] since there's only one sample
-        if isinstance(outputs, dict):
-            if "seg_logits" in outputs:
-                logits = outputs["seg_logits"]
-                pred_labels = torch.argmax(logits, dim=1).cpu().numpy()
-                confidences = torch.softmax(logits, dim=1).max(dim=1)[0].cpu().numpy()
-            else:
-                continue
-        else:
-            logits = outputs
-            pred_labels = torch.argmax(logits, dim=1).cpu().numpy()
-            confidences = torch.softmax(logits, dim=1).max(dim=1)[0].cpu().numpy()
-        
-        # Store results
-        all_predictions[sample_name] = pred_labels
-        all_confidences[sample_name] = confidences
-        
-        # If ground truth is available
-        if "segment" in input_dict:
-            segment = input_dict["segment"].cpu().numpy()
-            all_segment_ids[sample_name] = segment
-            
-            # Calculate metrics
-            valid_mask = segment != -1
-            correct = (pred_labels[valid_mask] == segment[valid_mask])
-            accuracy = correct.sum() / valid_mask.sum() if valid_mask.sum() > 0 else 0
-            all_scene_metrics[sample_name] = {
-                "accuracy": float(accuracy),
-                "num_points": int(valid_mask.sum())
-            }
-
-# Print summary statistics
-if all_scene_metrics:
-    accuracies = [metrics["accuracy"] for metrics in all_scene_metrics.values()]
-    mean_accuracy = np.mean(accuracies)
-    print(f"Mean slice accuracy: {mean_accuracy:.4f}")
-
-print(f"Processed {len(all_predictions)} slices")
+        print(f"Keys after: {outputs.keys()}")
