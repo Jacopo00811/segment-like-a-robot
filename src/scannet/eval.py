@@ -70,8 +70,10 @@ if __name__ == "__main__":
     cfg = default_config_parser(cfg_path, None)
 
     cfg.data_root = DATASET_ROOT
+    cfg.data.val.data_root = DATASET_ROOT
 
     val_loader = build_val_loader(cfg)
+    
 
     model = build_mod(cfg)
 
