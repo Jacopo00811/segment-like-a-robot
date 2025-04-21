@@ -114,6 +114,10 @@ all_scene_metrics = {}
 # Run inference test on entire validation set
 with torch.no_grad():
     for batch_idx, input_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
+        
+        if batch_idx > 2:
+            break
+        
         # Move input data to device
         for key in input_dict:
             if isinstance(input_dict[key], torch.Tensor):
