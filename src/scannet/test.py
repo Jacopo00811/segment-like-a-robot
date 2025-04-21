@@ -7,7 +7,7 @@ from pointcept.engines.test import TESTERS
 from pointcept.engines.launch import launch
 
 cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
-WEIGHTS = "./models/model_best_PointTransformer_V3.pth"
+WEIGHTS = "./models/PointTransformer_V3/model_best.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 
 
