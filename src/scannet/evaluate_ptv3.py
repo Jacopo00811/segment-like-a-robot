@@ -113,21 +113,23 @@ all_scene_metrics = {}
 
 # Run inference test on entire validation set
 with torch.no_grad():
-    for batch_idx, input_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
+    for idx, data_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
         
-        if batch_idx > 2:
+        print(data_dict.keys())
+
+        if idx > 2:
             break
         
         # Move input data to device
-        for key in input_dict:
-            if isinstance(input_dict[key], torch.Tensor):
-                input_dict[key] = input_dict[key].to(device)
+        for key in data_dict:
+            if isinstance(data_dict[key], torch.Tensor):
+                data_dict[key] = data_dict[key].to(device)
         
         # Get sample name
-        sample_name = dataset.get_data_name(batch_idx)
+        sample_name = dataset.get_data_name(idx)
         
         # Forward pass
-        outputs = model(input_dict)
+        outputs = model(data_dict)
         
         # Process predictions - no need to index with [i] since there's only one sample
         if isinstance(outputs, dict):
@@ -147,8 +149,8 @@ with torch.no_grad():
         all_confidences[sample_name] = confidences
         
         # If ground truth is available
-        if "segment" in input_dict:
-            segment = input_dict["segment"].cpu().numpy()
+        if "segment" in data_dict:
+            segment = data_dict["segment"].cpu().numpy()
             all_segment_ids[sample_name] = segment
             
             # Calculate metrics
