@@ -23,7 +23,7 @@ def main_worker(cfg):
 
 
 def main():
-    cfg = default_config_parser(cfg_path)
+    cfg = default_config_parser(cfg_path, None)
 
     launch(
         main_worker,
