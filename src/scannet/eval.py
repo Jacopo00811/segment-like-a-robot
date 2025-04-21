@@ -43,6 +43,8 @@ def build_mod(cfg):
 
 def eval(cfg, model, val_loader):
 
+    target_scene = ""
+
     for idx, input_dict in enumerate(tqdm(val_loader, desc="Processing Scenes")):
 
         print("Current scene: ", val_loader.dataset.get_data_name(idx))
@@ -55,6 +57,8 @@ def eval(cfg, model, val_loader):
             output_dict = model(input_dict)
         
         print(f"Input shape: {input_dict['coord'].shape}")
+        if input_dict['coord'].shape[0] == 305916:
+            target_scene = val_loader.dataset.get_data_name(idx)
         output = output_dict["seg_logits"]
         loss = output_dict["loss"]
         pred = output.max(1)[1]
@@ -120,6 +124,7 @@ def eval(cfg, model, val_loader):
         print("loss: ", loss.item())
 
     print("Test passed!")
+    print(f"Target Scene: {target_scene}")
     
 def load_config_from_file(config_path):
     abs_config_path = os.path.abspath(config_path)
@@ -173,8 +178,8 @@ if __name__ == "__main__":
 
     # visualize the model
     visualize_scene(
-        scene_folder="val/scene0019_00",
-        prediction_path="reports/scannet/pointcloud/scene0011_01_pred.npy",
+        scene_folder="val/scene0696_02",
+        prediction_path="reports/scannet/pointcloud/scene0696_02_pred.npy",
         data_root=DATASET_ROOT
     )
 

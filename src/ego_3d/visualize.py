@@ -163,6 +163,9 @@ def visualize_scene(scene_folder, prediction_path=None, data_root=data_path):
         prediction_path: path to the prediction file (optional)
     """
     scene_path = os.path.join(data_root, scene_folder)
+
+    print(f"loading from scene {scene_path}")
+
     coords = np.load(os.path.join(scene_path, "coord.npy"))
     colors = np.load(os.path.join(scene_path, "color.npy"))
     gt_labels = np.load(os.path.join(scene_path, "segment20.npy"))
