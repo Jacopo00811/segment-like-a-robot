@@ -26,7 +26,7 @@ def build_val_loader(cfg):
         val_data,
         batch_size=1,
         shuffle=False,
-        num_workers=cfg.num_worker_per_gpu,
+        num_workers=4,
         pin_memory=True,
         sampler=val_sampler,
         collate_fn=collate_fn,
