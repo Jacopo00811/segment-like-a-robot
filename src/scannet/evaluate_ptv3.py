@@ -1,5 +1,6 @@
 import torch
 from pointcept.datasets.scannet import ScanNetDataset
+from pointcept.datasets.utils import collate_fn
 from pointcept.models.point_transformer_v3.point_transformer_v3m1_base import PointTransformerV3
 import os
 from importlib.util import spec_from_file_location, module_from_spec
@@ -92,6 +93,7 @@ dataloader = torch.utils.data.DataLoader(
         pin_memory=True,
         drop_last=False,
         persistent_workers=True,
+        collate_fn=collate_fn,
     )
 
 
@@ -165,59 +167,3 @@ if all_scene_metrics:
     print(f"Mean scene accuracy: {mean_accuracy:.4f}")
 print(f"Processed {len(all_predictions)} scenes")
 
-
-
-
-
-# # Run inference
-# with torch.no_grad():
-#     for batch_idx, input_dict in enumerate(tqdm(dataloader_all, desc="Processing slices")):
-#         # Move input data to device
-#         for key in input_dict:
-#             if isinstance(input_dict[key], torch.Tensor):
-#                 input_dict[key] = input_dict[key].to(device)
-        
-#         # Get sample name
-#         sample_name = dataset.get_data_name(batch_idx)
-        
-#         # Forward pass
-#         outputs = model(input_dict)
-        
-#         # Process predictions - no need to index with [i] since there's only one sample
-#         if isinstance(outputs, dict):
-#             if "seg_logits" in outputs:
-#                 logits = outputs["seg_logits"]
-#                 pred_labels = torch.argmax(logits, dim=1).cpu().numpy()
-#                 confidences = torch.softmax(logits, dim=1).max(dim=1)[0].cpu().numpy()
-#             else:
-#                 continue
-#         else:
-#             logits = outputs
-#             pred_labels = torch.argmax(logits, dim=1).cpu().numpy()
-#             confidences = torch.softmax(logits, dim=1).max(dim=1)[0].cpu().numpy()
-        
-#         # Store results
-#         all_predictions[sample_name] = pred_labels
-#         all_confidences[sample_name] = confidences
-        
-#         # If ground truth is available
-#         if "segment" in input_dict:
-#             segment = input_dict["segment"].cpu().numpy()
-#             all_segment_ids[sample_name] = segment
-            
-#             # Calculate metrics
-#             valid_mask = segment != -1
-#             correct = (pred_labels[valid_mask] == segment[valid_mask])
-#             accuracy = correct.sum() / valid_mask.sum() if valid_mask.sum() > 0 else 0
-#             all_scene_metrics[sample_name] = {
-#                 "accuracy": float(accuracy),
-#                 "num_points": int(valid_mask.sum())
-#             }
-
-# # Print summary statistics
-# if all_scene_metrics:
-#     accuracies = [metrics["accuracy"] for metrics in all_scene_metrics.values()]
-#     mean_accuracy = np.mean(accuracies)
-#     print(f"Mean slice accuracy: {mean_accuracy:.4f}")
-
-# print(f"Processed {len(all_predictions)} slices")
