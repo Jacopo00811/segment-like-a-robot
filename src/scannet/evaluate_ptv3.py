@@ -103,57 +103,6 @@ dataloader = torch.utils.data.DataLoader(
 
 
 
-# Define the test-time transformations
-test_transform = [
-    # Convert colors from 0-255 range to 0-1 range
-    {'name': 'NormalizeColor'},
-    # Convert numpy arrays to PyTorch tensors
-    {'name': 'ToTensor'},
-]
-
-test_dataset = ScanNetDataset(
-    split='val',
-    data_root=DATASET_ROOT,
-    transform=test_transform,
-    test_mode=True,
-    test_cfg=dict(
-        voxelize=dict(
-            type='GridSample',
-            grid_size=0.02,
-            hash_type='fnv',
-            mode='test',
-            return_grid_coord=True,
-            return_min_coord=True,
-        ),
-        crop=None,
-        post_transform=[
-            dict(type='ToTensor'),
-        ],
-        aug_transform=[
-            [dict(type='RandomFlip', p=0.0)],  # No-op in test mode
-        ]
-    ),
-    loop=1
-)
-
-# Custom collate function for handling fragments
-def test_collate_fn(batch):
-    # The batch is already a list of scenes, return as is since each scene is processed individually
-    return batch
-
-# Create the test data loader
-test_loader = torch.utils.data.DataLoader(
-    test_dataset,
-    batch_size=1,  # Must be 1 for ScanNet test mode
-    shuffle=False,
-    num_workers=4,
-    pin_memory=True,
-    drop_last=False,
-    collate_fn=test_collate_fn,
-)
-
-
-
 
 # Move model to GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -169,7 +118,7 @@ all_scene_metrics = {}
 
 # Run inference test on entire validation set
 with torch.no_grad():
-    for idx, data_dict in enumerate(tqdm(test_loader, desc="Processing scenes")):
+    for idx, data_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
 
         print(data_dict)
 
