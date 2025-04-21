@@ -56,7 +56,8 @@ def eval(cfg, model, val_loader):
         with torch.no_grad():
             output_dict = model(input_dict)
         
-        print(f"Input shape: {input_dict['coord'].shape}")
+        print(f"Input shape: {input_dict['coord'].shape[0]}")
+
         if input_dict['coord'].shape[0] == 305916:
             target_scene = val_loader.dataset.get_data_name(idx)
         output = output_dict["seg_logits"]
@@ -93,10 +94,6 @@ def eval(cfg, model, val_loader):
         m_acc = np.mean(acc_class)
         all_acc = sum(intersection) / (sum(target) + 1e-10)
         print(f"mIoU: {m_iou:.4f}, mAcc: {m_acc:.4f}, allAcc: {all_acc:.4f}")
-
-
-
-
 
 
         print(f"Output shape: {pred.shape}")
