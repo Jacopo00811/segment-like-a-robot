@@ -6,6 +6,8 @@ import os
 from importlib.util import spec_from_file_location, module_from_spec
 from tqdm import tqdm
 import numpy as np
+from pointcept.datasets.transform import Compose, TRANSFORMS
+
 
 def load_config_from_file(config_path):
     
@@ -78,10 +80,11 @@ model.eval()
 
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 
+
+
 dataset = ScanNetDataset(
     split='val',
     data_root=DATASET_ROOT,
-    test_mode=True,
 )
 
 
