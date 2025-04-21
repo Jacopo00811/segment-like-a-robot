@@ -1,7 +1,7 @@
 import torch
 import os
 from importlib.util import spec_from_file_location, module_from_spec
-from dataset import EgoSlicedScanNetDataset, single_sample_collate_fn
+from ego_3d.dataset import EgoSlicedScanNetDataset, single_sample_collate_fn
 from tqdm import tqdm
 from pointcept.models.default import DefaultSegmentorV2
 import numpy as np
