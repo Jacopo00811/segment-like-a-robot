@@ -80,7 +80,8 @@ DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 
 dataset = ScanNetDataset(
     split='val',
-    data_root=DATASET_ROOT
+    data_root=DATASET_ROOT,
+    test_mode=True,
 )
 
 
@@ -114,58 +115,16 @@ all_scene_metrics = {}
 # Run inference test on entire validation set
 with torch.no_grad():
     for idx, data_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
-        
-        print(data_dict.keys())
-
+         
         if idx > 2:
             break
-        
-        # Move input data to device
-        for key in data_dict:
-            if isinstance(data_dict[key], torch.Tensor):
-                data_dict[key] = data_dict[key].to(device)
-        
-        # Get sample name
-        sample_name = dataset.get_data_name(idx)
-        
-        # Forward pass
-        outputs = model(data_dict)
-        
-        # Process predictions - no need to index with [i] since there's only one sample
-        if isinstance(outputs, dict):
-            if "seg_logits" in outputs:
-                logits = outputs["seg_logits"]
-                pred_labels = torch.argmax(logits, dim=1).cpu().numpy()
-                confidences = torch.softmax(logits, dim=1).max(dim=1)[0].cpu().numpy()
-            else:
-                continue
-        else:
-            logits = outputs
-            pred_labels = torch.argmax(logits, dim=1).cpu().numpy()
-            confidences = torch.softmax(logits, dim=1).max(dim=1)[0].cpu().numpy()
-        
-        # Store results
-        all_predictions[sample_name] = pred_labels
-        all_confidences[sample_name] = confidences
-        
-        # If ground truth is available
-        if "segment" in data_dict:
-            segment = data_dict["segment"].cpu().numpy()
-            all_segment_ids[sample_name] = segment
-            
-            # Calculate metrics
-            valid_mask = segment != -1
-            correct = (pred_labels[valid_mask] == segment[valid_mask])
-            accuracy = correct.sum() / valid_mask.sum() if valid_mask.sum() > 0 else 0
-            all_scene_metrics[sample_name] = {
-                "accuracy": float(accuracy),
-                "num_points": int(valid_mask.sum())
-            }
+         
+        data_dict = data_dict[0]  # Get the first (and only) item in the batch
 
-# Print summary statistics
-if all_scene_metrics:
-    accuracies = [metrics["accuracy"] for metrics in all_scene_metrics.values()]
-    mean_accuracy = np.mean(accuracies)
-    print(f"Mean slice accuracy: {mean_accuracy:.4f}")
+        fragment_list = data_dict.pop("fragment_list")
+        segment = data_dict.pop("segment")
 
-print(f"Processed {len(all_predictions)} scenes")
+
+       
+        
+       
