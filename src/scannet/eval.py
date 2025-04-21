@@ -137,47 +137,47 @@ if __name__ == "__main__":
     weights_path = "./models/PointTransformer_V3/model_best.pth"
     DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 
-    cfg = default_config_parser(cfg_path, None)
+    # cfg = default_config_parser(cfg_path, None)
 
-    cfg.data_root = DATASET_ROOT
-    cfg.data.test.data_root = DATASET_ROOT
-    cfg.data.val.data_root = DATASET_ROOT
+    # cfg.data_root = DATASET_ROOT
+    # cfg.data.test.data_root = DATASET_ROOT
+    # cfg.data.val.data_root = DATASET_ROOT
 
-    val_loader = build_val_loader(cfg)
+    # val_loader = build_val_loader(cfg)
     
 
-    model = build_mod(cfg)
+    # model = build_mod(cfg)
 
-    checkpoint = torch.load(weights_path, map_location="cpu", weights_only=False)
+    # checkpoint = torch.load(weights_path, map_location="cpu", weights_only=False)
 
-    if 'state_dict' in checkpoint:
-        checkpoint = checkpoint['state_dict']
-    else:
-        state_dict = checkpoint
+    # if 'state_dict' in checkpoint:
+    #     checkpoint = checkpoint['state_dict']
+    # else:
+    #     state_dict = checkpoint
 
-    backbone_state_dict = {}
-    for k, v in checkpoint.items():
-        if k.startswith("backbone."):
-            backbone_state_dict[k] = v
-        else:
-            backbone_state_dict[f"backbone.{k}"] = v
+    # backbone_state_dict = {}
+    # for k, v in checkpoint.items():
+    #     if k.startswith("backbone."):
+    #         backbone_state_dict[k] = v
+    #     else:
+    #         backbone_state_dict[f"backbone.{k}"] = v
 
-    # Load the weights
-    model.load_state_dict(backbone_state_dict, strict=False)
-    print(f"Loaded model weights from {weights_path}")
+    # # Load the weights
+    # model.load_state_dict(backbone_state_dict, strict=False)
+    # print(f"Loaded model weights from {weights_path}")
 
-    # Move the model to GPU
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = model.to(device)
-    model.eval()
+    # # Move the model to GPU
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # model = model.to(device)
+    # model.eval()
 
-    # evaluate the model
-    eval(cfg, model, val_loader)
+    # # evaluate the model
+    # eval(cfg, model, val_loader)
 
     # visualize the model
     visualize_scene(
-        scene_folder="val/scene0696_02",
-        prediction_path="reports/scannet/pointcloud/scene0696_02_pred.npy",
+        scene_folder="val/scene0011_00",
+        prediction_path="exp/default/result/scene0011_00_pred.npy",
         data_root=DATASET_ROOT
     )
 

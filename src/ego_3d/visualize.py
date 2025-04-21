@@ -255,7 +255,9 @@ def visualize_scene(scene_folder, prediction_path=None, data_root=data_path):
     plt.tight_layout()
     os.makedirs('reports/scannet/figures', exist_ok=True)
 
-    fig_path = f"reports/scannet/figures/{scene_folder}.png"
+    scene_name = scene_folder.split("/")[-1]
+
+    fig_path = f"reports/scannet/figures/{scene_name}.png"
     plt.savefig(fig_path, dpi=300, bbox_inches='tight')
     print(f"Figure saved to {fig_path}")
 

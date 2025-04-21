@@ -184,3 +184,5 @@ cython_debug/
 # ignore sparsehash files
 externals/sparsehash/
 *.pth
+
+exp/
