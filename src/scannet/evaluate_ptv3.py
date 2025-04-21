@@ -7,6 +7,7 @@ from importlib.util import spec_from_file_location, module_from_spec
 from tqdm import tqdm
 import numpy as np
 from pointcept.datasets.transform import Compose, TRANSFORMS
+from pointcept.datasets import collate_fn
 
 
 def load_config_from_file(config_path):
@@ -97,7 +98,7 @@ dataloader = torch.utils.data.DataLoader(
         pin_memory=True,
         drop_last=False,
         persistent_workers=True,
-        collate_fn=single_sample_collate_fn,
+        collate_fn=collate_fn,
     )
 
 
@@ -118,6 +119,9 @@ all_scene_metrics = {}
 # Run inference test on entire validation set
 with torch.no_grad():
     for idx, data_dict in enumerate(tqdm(dataloader, desc="Processing scenes")):
+
+        print(data_dict)
+
         # Get the first (and only) item in the batch
         data_dict = data_dict[0]  
         
