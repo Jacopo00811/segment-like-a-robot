@@ -171,6 +171,11 @@ def visualize_scene(scene_folder, prediction_path=None, data_root=data_path):
 
     fig = plt.figure(figsize=(18, 6))
 
+    # Normalize the colors to 0-1 range if they're not already
+    if colors.max() > 1.0:
+        colors = colors / 255.0
+    
+
     # Plot 1: Original Point Cloud with RGB colors
     ax1 = fig.add_subplot(131, projection='3d')
     ax1.scatter(coords[:, 0], coords[:, 1], coords[:, 2], c=colors, s=1)
