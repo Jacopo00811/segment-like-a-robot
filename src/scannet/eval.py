@@ -137,6 +137,7 @@ if __name__ == "__main__":
     visualize_scene(
         scene_folder="scene0011_01",
         prediction_path="reports/scannet/pointcloud/scene0011_01_pred.npy",
+        data_root=DATASET_ROOT
     )
 
 

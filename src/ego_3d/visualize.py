@@ -154,7 +154,7 @@ def visualize_slice(scene_folder, slice_name, prediction_path=None):
     plt.savefig(fig_path, dpi=300, bbox_inches='tight')
     print(f"Figure saved to {fig_path}")
 
-def visualize_scene(scene_folder, prediction_path=None):
+def visualize_scene(scene_folder, prediction_path=None, data_root=data_path):
     """
     Visualize a scene with its ground truth and prediction
     
@@ -162,7 +162,7 @@ def visualize_scene(scene_folder, prediction_path=None):
         scene_folder: path to the scene folder
         prediction_path: path to the prediction file (optional)
     """
-    scene_path = os.path.join(data_path, scene_folder)
+    scene_path = os.path.join(data_root, scene_folder)
     coords = np.load(os.path.join(scene_path, "coord.npy"))
     colors = np.load(os.path.join(scene_path, "color.npy"))
     gt_labels = np.load(os.path.join(scene_path, "segment20.npy"))
