@@ -96,12 +96,31 @@ if __name__ == "__main__":
     print(f"Number of unique scenes: {len(scenes)}")
     print(f"Average slices per scene: {len(dataset.data_list)/len(scenes):.1f}")
     
+    # Define custom collate function to handle variable-sized point clouds
+    def custom_collate_fn(batch):
+        """
+        Custom collate function that ensures each batch element is treated as a separate entity
+        rather than trying to stack them together.
+        """
+        result = {}
+        for key in batch[0].keys():
+            result[key] = []
+            for sample in batch:
+                result[key].append(sample[key])
+                
+        # Offeset count if network requires it
+        coords_count = [b['coord'].shape[0] for b in batch]
+        offsets = torch.cumsum(torch.tensor(coords_count), dim=0)
+        result['offset'] = offsets
+        
+        return result
+    
     dataloader = torch.utils.data.DataLoader(
             dataset,
-            batch_size=8,
+            batch_size=4,  # Reduced batch size for testing
             shuffle=False,
             num_workers=4,
-            collate_fn=point_collate_fn, # Should handle different dimensions of point clouds
+            collate_fn=custom_collate_fn,  # Use our custom collate function
             pin_memory=True,
             drop_last=False,
             persistent_workers=True,
@@ -112,4 +131,7 @@ if __name__ == "__main__":
     # Get first batch to verify
     batch = next(iter(dataloader))
     print(f"Batch contains keys: {list(batch.keys())}")
-    print(f"Batch size (coord shape): {batch['coord'].shape}")
+    print(f"Number of samples in batch: {len(batch['coord'])}")
+    print(f"Sample point counts: {[coord.shape[0] for coord in batch['coord']]}")
+    print(f"Offset tensor: {batch['offset']}")
+    print(f"{type(batch["offset"][0])}")
