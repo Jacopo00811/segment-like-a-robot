@@ -54,13 +54,14 @@ def eval(cfg, model, val_loader):
             output_dict = model(input_dict)
         
         print("output_dict: ", output_dict.keys())
+        print("input_dict: ", input_dict.keys())
         output = output_dict["seg_logits"]
         loss = output_dict["loss"]
         pred = output.max(1)[1]
         
         if idx == len(val_loader) - 1:
             os.makedirs('reports/scannet/pointcloud', exist_ok=True)
-            last_scene_name = output_dict["scene_name"]
+            last_scene_name = input_dict["scene_name"]
 
             np.save(
                 f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
