@@ -20,18 +20,6 @@ def build_val_loader(cfg):
 
     val_data = build_dataset(cfg.data.val)
 
-    val_sampler = None # None for now
-
-    val_loader = torch.utils.data.DataLoader(
-        val_data,
-        batch_size=1,
-        shuffle=False,
-        num_workers=4,
-        pin_memory=True,
-        sampler=val_sampler,
-        collate_fn=collate_fn,
-    )
-
     return val_loader
 
 def build_mod(cfg):
