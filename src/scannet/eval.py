@@ -44,9 +44,8 @@ def build_mod(cfg):
 def eval(cfg, model, val_loader):
 
     for idx, input_dict in enumerate(tqdm(val_loader, desc="Processing Scenes")):
-        
-        if idx > 1:
-            break
+
+        print("Current scene: ", val_loader.dataset.get_data_name(idx))
 
         for key in input_dict.keys():
             if isinstance(input_dict[key], torch.Tensor):
