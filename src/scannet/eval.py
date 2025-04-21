@@ -55,8 +55,7 @@ def eval(cfg, model, val_loader):
         
         output = output_dict["seg_logits"]
         loss = output_dict["loss"]
-        pred = output.max(1)(1)
-
+        pred = output.max(1)[1]
         segment = input_dict["segment"]
 
         print("loss: ", loss.item())
