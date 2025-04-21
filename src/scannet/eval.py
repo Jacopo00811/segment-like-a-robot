@@ -16,7 +16,6 @@ from pointcept.models import build_model
 def build_val_loader(cfg):
 
     val_loader = None
-    print(cfg.data.keys())
 
     val_data = build_dataset(cfg.data.val)
 
@@ -24,9 +23,9 @@ def build_val_loader(cfg):
 
     val_loader = torch.utils.data.DataLoader(
         val_data,
-        batch_size=cfg.batch_size_val_per_gpu,
+        batch_size=1,
         shuffle=False,
-        num_workers=cfg.workers_per_gpu,
+        num_workers=4,
         pin_memory=True,
         sampler=val_sampler,
         collate_fn=collate_fn,
