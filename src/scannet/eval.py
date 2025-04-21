@@ -59,7 +59,7 @@ def eval(cfg, model, val_loader):
         loss = output_dict["loss"]
         pred = output.max(1)[1]
         print(f"Output shape: {pred.shape}")
-        print(f"GT shape: {input_dict['seg_label'].shape}")
+        print(f"GT shape: {input_dict['segment'].shape}")
         
         if idx == len(val_loader) - 1:
             os.makedirs('reports/scannet/pointcloud', exist_ok=True)
