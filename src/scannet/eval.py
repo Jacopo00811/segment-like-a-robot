@@ -44,7 +44,7 @@ def build_mod(cfg):
 def eval(cfg, model, val_loader):
 
     target_scene = ""
-    print(val_loader.keys())
+    print(val_loader)
     for idx, input_dict in enumerate(tqdm(val_loader, desc="Evaluating scenes")):
 
         print("Current scene: ", val_loader.dataset.get_data_name(idx))
