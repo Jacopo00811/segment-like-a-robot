@@ -56,7 +56,25 @@ def eval(cfg, model, val_loader):
         output = output_dict["seg_logits"]
         loss = output_dict["loss"]
         pred = output.max(1)[1]
-        segment = input_dict["segment"]
+        
+        if idx == len(val_loader) - 1:
+            os.makedirs('reports/scannet/pointcloud', exist_ok=True)
+            last_scene_name = output_dict["scene_name"]
+
+            np.save(
+                f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
+                pred.cpu().numpy()
+            )
+            print(f"\nSaved predictions for the last scene: {last_scene_name}")
+        elif idx == 1: # Temp for testing
+            os.makedirs('reports/scannet/pointcloud', exist_ok=True)
+            last_scene_name = output_dict["scene_name"]
+
+            np.save(
+                f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
+                pred.cpu().numpy()
+            )
+            print(f"\nSaved predictions for the last scene: {last_scene_name}")
 
         print("loss: ", loss.item())
 
