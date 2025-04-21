@@ -60,7 +60,7 @@ def eval(cfg, model, val_loader):
         loss = output_dict["loss"]
         pred = output.max(1)[1]
 
-        segement = input_dict["segment"]
+        segment = input_dict["segment"]
         if "origin_coord" in input_dict.keys():
             i, _ = pointops.knn_query(
                 1,
