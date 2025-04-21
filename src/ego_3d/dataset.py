@@ -3,6 +3,7 @@ import os
 from pointcept.datasets.scannet import ScanNetDataset
 from collections.abc import Sequence
 import torch
+import numpy as np
 import torch.utils.data
 from pointcept.datasets.utils import point_collate_fn
 
@@ -54,6 +55,27 @@ class EgoSlicedScanNetDataset(ScanNetDataset):
         return f"{scene_name}_{slice_name}"
 
 
+def custom_collate_fn(batch):
+    """
+    Custom collate function that converts NumPy arrays to PyTorch tensors
+    while keeping samples separate in lists.
+    """
+    result = {}
+    for key in batch[0].keys():
+        result[key] = []
+        for sample in batch:
+            if isinstance(sample[key], np.ndarray):
+                result[key].append(torch.from_numpy(sample[key]))
+            else:
+                result[key].append(sample[key])
+                
+    # Offset calculation if needed 
+    coords_count = [b['coord'].shape[0] for b in batch]
+    offsets = torch.cumsum(torch.tensor(coords_count), dim=0)
+    result['offset'] = offsets
+    
+    return result
+
 
 if __name__ == "__main__":
     PATH = "/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed"
@@ -97,23 +119,7 @@ if __name__ == "__main__":
     print(f"Average slices per scene: {len(dataset.data_list)/len(scenes):.1f}")
     
     # Define custom collate function to handle variable-sized point clouds
-    def custom_collate_fn(batch):
-        """
-        Custom collate function that ensures each batch element is treated as a separate entity
-        rather than trying to stack them together.
-        """
-        result = {}
-        for key in batch[0].keys():
-            result[key] = []
-            for sample in batch:
-                result[key].append(sample[key])
-                
-        # Offeset count if network requires it
-        coords_count = [b['coord'].shape[0] for b in batch]
-        offsets = torch.cumsum(torch.tensor(coords_count), dim=0)
-        result['offset'] = offsets
-        
-        return result
+
     
     dataloader = torch.utils.data.DataLoader(
             dataset,
@@ -134,4 +140,4 @@ if __name__ == "__main__":
     print(f"Number of samples in batch: {len(batch['coord'])}")
     print(f"Sample point counts: {[coord.shape[0] for coord in batch['coord']]}")
     print(f"Offset tensor: {batch['offset']}")
-    print(f"{type(batch["offset"][0])}")
+    print(f"{type(batch["coord"][0])}")
