@@ -154,7 +154,101 @@ def visualize_slice(scene_folder, slice_name, prediction_path=None):
     plt.savefig(fig_path, dpi=300, bbox_inches='tight')
     print(f"Figure saved to {fig_path}")
 
+def visualize_scene(scene_folder, prediction_path=None):
+    """
+    Visualize a scene with its ground truth and prediction
+    
+    Args:
+        scene_folder: path to the scene folder
+        prediction_path: path to the prediction file (optional)
+    """
+    scene_path = os.path.join(data_path, scene_folder)
+    coords = np.load(os.path.join(scene_path, "coord.npy"))
+    colors = np.load(os.path.join(scene_path, "color.npy"))
+    gt_labels = np.load(os.path.join(scene_path, "segment20.npy"))
 
+    predictions = np.load(prediction_path)
+
+    fig = plt.figure(figsize=(18, 6))
+
+    # Plot 1: Original Point Cloud with RGB colors
+    ax1 = fig.add_subplot(131, projection='3d')
+    ax1.scatter(coords[:, 0], coords[:, 1], coords[:, 2], c=colors, s=1)
+    ax1.set_title('Original Point Cloud')
+    ax1.set_xlabel('X')
+    ax1.set_ylabel('Y')
+    ax1.set_zlabel('Z')
+    ax1.grid(False)
+
+    # Convert class indices to colors for ground truth
+    gt_colors = np.zeros((len(gt_labels), 3))
+    for i, label in enumerate(gt_labels):
+        if label >= 0 and label < len(VALID_CLASS_IDS_20):
+            class_id = VALID_CLASS_IDS_20[label]
+            gt_colors[i] = SCANNET_COLOR_MAP_20[class_id]
+
+    # Plot 2: Ground Truth Segmentation with correct colors
+    ax2 = fig.add_subplot(132, projection='3d')
+    ax2.scatter(coords[:, 0], coords[:, 1], coords[:, 2], c=gt_colors, s=1)
+    ax2.set_title('Ground Truth Segmentation')
+    ax2.set_xlabel('X')
+    ax2.set_ylabel('Y')
+    ax2.set_zlabel('Z')
+    ax2.grid(False)
+
+    # Create legend for ground truth
+    unique_labels = np.unique(gt_labels)
+    unique_labels = unique_labels[unique_labels >= 0]  # Filter out ignore index
+    legend_elements = []
+    for label in unique_labels:
+        if label < len(CLASS_LABELS_20):
+            class_name = CLASS_LABELS_20[label]
+            class_id = VALID_CLASS_IDS_20[label]
+            legend_elements.append(plt.Line2D([0], [0], marker='o', color='w',
+                                  markerfacecolor=SCANNET_COLOR_MAP_20[class_id],
+                                  markersize=8, label=f'{label}: {class_name}'))
+            
+    # Add legend outside the plot
+    ax2.legend(handles=legend_elements, bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    
+    # Plot 3: Predicted Segmentation
+    # Convert prediction indices to colors
+    pred_colors = np.zeros((len(predictions), 3))
+    for i, label in enumerate(predictions):
+        if label >= 0 and label < len(VALID_CLASS_IDS_20):
+            class_id = VALID_CLASS_IDS_20[label]
+            pred_colors[i] = SCANNET_COLOR_MAP_20[class_id]
+    ax3 = fig.add_subplot(133, projection='3d')
+    ax3.scatter(coords[:, 0], coords[:, 1], coords[:, 2], c=pred_colors, s=1)
+    ax3.set_title('Predicted Segmentation')
+    ax3.set_xlabel('X')
+    ax3.set_ylabel('Y')
+    ax3.set_zlabel('Z')
+    ax3.grid(False)
+
+    # Legend for predictions
+    unique_preds = np.unique(predictions)
+    unique_preds = unique_preds[unique_preds >= 0]  # Filter out ignore index
+    pred_legend_elements = []
+    for label in unique_preds:
+        if label < len(CLASS_LABELS_20):
+            class_name = CLASS_LABELS_20[label]
+            class_id = VALID_CLASS_IDS_20[label]
+            pred_legend_elements.append(plt.Line2D([0], [0], marker='o', color='w',
+                                    markerfacecolor=SCANNET_COLOR_MAP_20[class_id],
+                                    markersize=8, label=f'{label}: {class_name}'))
+    
+    ax3.legend(handles=pred_legend_elements, bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.tight_layout()
+    os.makedirs('reports/scannet/figures', exist_ok=True)
+
+    fig_path = f"reports/scannet/figures/{scene_folder}.png"
+    plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+    print(f"Figure saved to {fig_path}")
+
+
+    
 
 if __name__ == "__main__":
     pred_filename = os.path.basename(single_prediction_path)

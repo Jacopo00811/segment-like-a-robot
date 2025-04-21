@@ -10,6 +10,7 @@ from pointcept.datasets.scannet import ScanNetDataset
 from pointcept.datasets import build_dataset, point_collate_fn, collate_fn
 from pointcept.models import build_model
 from pointcept.engines.defaults import default_config_parser
+from ego_3d.visualize import visualize_scene
 
 
 
@@ -132,7 +133,11 @@ if __name__ == "__main__":
     # evaluate the model
     eval(cfg, model, val_loader)
 
-    
+    # visualize the model
+    visualize_scene(
+        scene_folder="scene0011_01",
+        prediction_path="reports/scannet/pointcloud/scene0011_01_pred.npy",
+    )
 
 
 
