@@ -123,6 +123,9 @@ uv pip install --no-build-isolation .
 8. Install flash attention:
 uv pip install flash-attn --no-build-isolation
 
+9. Update torch-scatter implementation to be CUDA complied
+uv pip uninstall torch-scatter
+uv pip install torch-scatter -f https://data.pyg.org/whl/torch-2.5.1+cu124.html
 
 ##############################################
 

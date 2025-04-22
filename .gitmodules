@@ -4,3 +4,6 @@
 [submodule "externals/Mask3D"]
 	path = externals/Mask3D
 	url = https://github.com/JonasSchult/Mask3D.git
+[submodule "externals/sonata"]
+	path = externals/sonata
+	url = https://github.com/facebookresearch/sonata.git

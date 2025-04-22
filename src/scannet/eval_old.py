@@ -1,0 +1,185 @@
+import torch
+import os
+from importlib.util import spec_from_file_location, module_from_spec
+from ego_3d.dataset import EgoSlicedScanNetDataset, single_sample_collate_fn
+from tqdm import tqdm
+from pointcept.models.default import DefaultSegmentorV2
+import numpy as np
+from sklearn.metrics import confusion_matrix
+from pointcept.datasets.scannet import ScanNetDataset
+from pointcept.datasets import build_dataset, point_collate_fn, collate_fn
+from pointcept.models import build_model
+from pointcept.engines.defaults import default_config_parser
+from ego_3d.visualize import visualize_scene
+import pointops
+from pointcept.utils.misc import intersection_and_union_gpu
+
+
+
+def build_val_loader(cfg):
+
+    val_loader = None
+
+    val_data = build_dataset(cfg.data.val)
+    
+    val_sampler = None
+
+    val_loader = torch.utils.data.DataLoader(
+        val_data,
+        batch_size=1,
+        shuffle=False,
+        num_workers=1,
+        pin_memory=True,
+        sampler=val_sampler,
+        collate_fn=collate_fn,
+    )
+    return val_loader
+
+def build_mod(cfg):
+    model = build_model(cfg.model)
+    model.eval()
+    return model
+
+
+def eval(cfg, model, val_loader):
+
+    target_scene = ""
+    print(val_loader)
+    for idx, input_dict in enumerate(tqdm(val_loader, desc="Evaluating scenes")):
+
+        print("Current scene: ", val_loader.dataset.get_data_name(idx))
+
+        for key in input_dict.keys():
+            if isinstance(input_dict[key], torch.Tensor):
+                input_dict[key] = input_dict[key].cuda(non_blocking=True)
+        
+        with torch.no_grad():
+            output_dict = model(input_dict)
+        
+        print(f"Input shape: {input_dict['coord'].shape[0]}")
+
+        if input_dict['coord'].shape[0] == 305916:
+            target_scene = val_loader.dataset.get_data_name(idx)
+        output = output_dict["seg_logits"]
+        loss = output_dict["loss"]
+        pred = output.max(1)[1]
+
+        segment = input_dict["segment"]
+        if "origin_coord" in input_dict.keys():
+            i, _ = pointops.knn_query(
+                1,
+                input_dict["coord"].float(),
+                input_dict["offset"].int(),
+                input_dict["origin_coord"].float(),
+                input_dict["origin_offset"].int(),
+            )
+            pred = pred[idx.flatten().long()]
+            segment = input_dict["origin_segment"]
+
+        intersection, union, target = intersection_and_union_gpu(
+            pred,
+            segment,
+            cfg.data.num_classes,
+            cfg.data.ignore_index,
+
+        )
+
+        intersection = intersection.cpu().numpy()
+        union = union.cpu().numpy()
+        target = target.cpu().numpy()
+
+        iou_class = intersection / (union + 1e-10)
+        acc_class = intersection / (target + 1e-10)
+        m_iou = np.mean(iou_class)
+        m_acc = np.mean(acc_class)
+        all_acc = sum(intersection) / (sum(target) + 1e-10)
+        print(f"mIoU: {m_iou:.4f}, mAcc: {m_acc:.4f}, allAcc: {all_acc:.4f}")
+
+
+        print(f"Output shape: {pred.shape}")
+        print(f"GT shape: {input_dict['segment'].shape}")
+        
+        if idx == len(val_loader) - 1:
+            os.makedirs('reports/scannet/pointcloud', exist_ok=True)
+            last_scene_name = val_loader.dataset.get_data_name(idx)
+
+            np.save(
+                f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
+                pred.cpu().numpy()
+            )
+            print(f"\nSaved predictions for the last scene: {last_scene_name}")
+        elif idx == 1: # Temp for testing
+            os.makedirs('reports/scannet/pointcloud', exist_ok=True)
+            last_scene_name = val_loader.dataset.get_data_name(idx - 1)
+
+            np.save(
+                f"reports/scannet/pointcloud/{last_scene_name}_pred.npy",
+                pred.cpu().numpy()
+            )
+            print(f"\nSaved predictions for the last scene: {last_scene_name}")
+
+        print("loss: ", loss.item())
+
+    print("Test passed!")
+    print(f"Target Scene: {target_scene}")
+    
+def load_config_from_file(config_path):
+    abs_config_path = os.path.abspath(config_path)
+    spec = spec_from_file_location("config", abs_config_path)
+    config_module = module_from_spec(spec)
+    spec.loader.exec_module(config_module)
+    return config_module
+
+
+if __name__ == "__main__":
+
+    cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
+    weights_path = "./models/PointTransformer_V3/model_best.pth"
+    DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
+
+    # cfg = default_config_parser(cfg_path, None)
+
+    # cfg.data_root = DATASET_ROOT
+    # cfg.data.test.data_root = DATASET_ROOT
+    # cfg.data.val.data_root = DATASET_ROOT
+
+    # val_loader = build_val_loader(cfg)
+    
+
+    # model = build_mod(cfg)
+
+    # checkpoint = torch.load(weights_path, map_location="cpu", weights_only=False)
+
+    # if 'state_dict' in checkpoint:
+    #     checkpoint = checkpoint['state_dict']
+    # else:
+    #     state_dict = checkpoint
+
+    # backbone_state_dict = {}
+    # for k, v in checkpoint.items():
+    #     if k.startswith("backbone."):
+    #         backbone_state_dict[k] = v
+    #     else:
+    #         backbone_state_dict[f"backbone.{k}"] = v
+
+    # # Load the weights
+    # model.load_state_dict(backbone_state_dict, strict=False)
+    # print(f"Loaded model weights from {weights_path}")
+
+    # # Move the model to GPU
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # model = model.to(device)
+    # model.eval()
+
+    # # evaluate the model
+    # eval(cfg, model, val_loader)
+
+    # visualize the model
+    visualize_scene(
+        scene_folder="val/scene0697_02",
+        prediction_path="exp/default/result/scene0697_02_pred.npy",
+        data_root=DATASET_ROOT
+    )
+
+
+
