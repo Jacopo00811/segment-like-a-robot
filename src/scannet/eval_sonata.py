@@ -9,8 +9,11 @@ from pointcept.utils.config import Config
 import os
 from pointcept.utils.env import get_random_seed, set_seed
 
-cfg_path = "./Pointcept/configs/sonata/pretrain-sonata-v1m1-0-base.py"
-WEIGHTS = "./models/sonata/pretrain-sonata-v1m1-0-base.pth"
+import sonata
+
+
+cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
+WEIGHTS = "./models/sonata/sonata.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 SAVE_PATH = "./exp/sonata"
 
@@ -48,10 +51,10 @@ def main_worker(cfg):
     cfg.test.data_root = DATASET_ROOT
     cfg.data.test.data_root = DATASET_ROOT
     cfg.data.val.data_root = DATASET_ROOT
+    
 
-    cfg.weight = WEIGHTS
-
-    tester = TESTERS.build(test_cfg)    
+    tester = TESTERS.build(test_cfg)
+    cfg.model = sonata.model.load(WEIGHTS)
     tester.test()
 
 
