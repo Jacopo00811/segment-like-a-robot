@@ -13,7 +13,7 @@ import sonata
 from sonata.model import PointTransformerV3
 
 
-cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0c-scannet-ft.py"
+cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m2-0-sonata-scratch.py"
 FAKE_WEIGHTS = "./models/sonata/sonata.pth"
 WEIGHTS = "./models/sonata/sonata.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
