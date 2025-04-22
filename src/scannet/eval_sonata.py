@@ -38,7 +38,21 @@ def config_parser(file_path, options):
     return cfg
 
 
-def prepare_dataloal
+def main_worker(cfg):
+    
+    cfg = default_setup(cfg)
+
+
+    test_cfg = dict(cfg=cfg, **cfg.test)
+    cfg.test.data_root = DATASET_ROOT
+    cfg.data.test.data_root = DATASET_ROOT
+    cfg.data.val.data_root = DATASET_ROOT
+
+    cfg.weight = WEIGHTS
+
+    tester = TESTERS.build(test_cfg)
+    tester.test()
+
 
 
 
