@@ -13,8 +13,8 @@ import sonata
 from sonata.model import PointTransformerV3
 
 
-cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
-FAKE_WEIGHTS = "./models/PointTransformer_V3/model_best.pth"
+cfg_path = "./Pointcept/pointcept/models/point_transformer_v3/point_transformer_v3m2_sonata.py"
+FAKE_WEIGHTS = "./models/sonata/sonata.pth"
 WEIGHTS = "./models/sonata/sonata.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
 SAVE_PATH = "./exp/sonata"
@@ -57,8 +57,8 @@ def main_worker(cfg):
     cfg.weight = FAKE_WEIGHTS
     sonata_model = PointTransformerV3.from_pretrained(WEIGHTS)
     tester = TESTERS.build(test_cfg)
-    cfg.model = sonata_model
-    tester.model = sonata_model
+    # cfg.model = sonata_model
+    # tester.model = sonata_model
     tester.test()
 
 
