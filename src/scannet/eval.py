@@ -176,8 +176,8 @@ if __name__ == "__main__":
 
     # visualize the model
     visualize_scene(
-        scene_folder="val/scene0011_00",
-        prediction_path="exp/default/result/scene0011_00_pred.npy",
+        scene_folder="val/scene0697_02",
+        prediction_path="exp/default/result/scene0697_02_pred.npy",
         data_root=DATASET_ROOT
     )
 
