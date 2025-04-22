@@ -63,9 +63,9 @@ def main_worker(cfg):
     # # tester.model = sonata_model
     # tester.test()
     sonata_model = sonata.model.load(WEIGHTS)
-    print(f"Old device: {sonata_model.device}")
+    print(f"Old device: {sonata_model.parameters()}")
     sonata_model = sonata_model.to('cuda')
-    print(f"New device: {sonata_model.device}")
+    print(f"New device: {sonata_model.parameters()}")
 
     tester = SemSegTester(
         cfg=cfg,
