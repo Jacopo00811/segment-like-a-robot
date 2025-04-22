@@ -37,33 +37,15 @@ def config_parser(file_path, options):
         cfg.dump(os.path.join(cfg.save_path, "config.py"))
     return cfg
 
-def main_worker(cfg):
-    
-    cfg = default_setup(cfg)
 
+def prepare_dataloal
 
-    test_cfg = dict(cfg=cfg, **cfg.test)
-    cfg.test.data_root = DATASET_ROOT
-    cfg.data.test.data_root = DATASET_ROOT
-    cfg.data.val.data_root = DATASET_ROOT
-
-    cfg.weight = WEIGHTS
-
-    tester = TESTERS.build(test_cfg)
-    tester.test()
 
 
 def main():
     cfg = default_config_parser(cfg_path, None)
 
-    launch(
-        main_worker,
-        num_gpus_per_machine=1,
-        num_machines=1,
-        machine_rank=0,
-        dist_url='auto',
-        cfg=(cfg,),
-    )
+    
 
 
 if __name__ == "__main__":
