@@ -54,9 +54,10 @@ def main_worker(cfg):
     cfg.data.val.data_root = DATASET_ROOT
     
     cfg.weight = FAKE_WEIGHTS
-
+    sonata_model = sonata.model.load(WEIGHTS)
     tester = TESTERS.build(test_cfg)
-    cfg.model = sonata.model.load(WEIGHTS)
+    cfg.model = sonata_model
+    tester.model = sonata_model
     tester.test()
 
 
