@@ -52,7 +52,7 @@ def main_worker(cfg):
 
     cfg.weight = WEIGHTS
 
-    tester = TESTERS.build(test_cfg)
+    tester = TESTERS.build(test_cfg)    
     tester.test()
 
 

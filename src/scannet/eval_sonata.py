@@ -30,12 +30,13 @@ def config_parser(file_path, options):
 
     cfg.data.train.loop = cfg.epoch // cfg.eval_epoch
 
-    cfg.save_path = SAVE_PATH
+    # cfg.save_path = SAVE_PATH
 
     os.makedirs(os.path.join(cfg.save_path, "model"), exist_ok=True)
     if not cfg.resume:
         cfg.dump(os.path.join(cfg.save_path, "config.py"))
     return cfg
+
 
 
 def main_worker(cfg):
@@ -50,16 +51,21 @@ def main_worker(cfg):
 
     cfg.weight = WEIGHTS
 
-    tester = TESTERS.build(test_cfg)
+    tester = TESTERS.build(test_cfg)    
     tester.test()
 
 
-
-
 def main():
-    cfg = default_config_parser(cfg_path, None)
+    cfg = config_parser(cfg_path, None)
 
-    
+    launch(
+        main_worker,
+        num_gpus_per_machine=1,
+        num_machines=1,
+        machine_rank=0,
+        dist_url='auto',
+        cfg=(cfg,),
+    )
 
 
 if __name__ == "__main__":
