@@ -12,7 +12,7 @@ from pointcept.utils.env import get_random_seed, set_seed
 cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
 WEIGHTS = "./models/PointTransformer_V3/model_best.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
-SAVE_PATH = "/dtu/blackhole/0e/169006/ScanNet/exp/default"
+SAVE_PATH = "./exp/pt3"
 
 
 def config_parser(file_path, options):
@@ -31,7 +31,7 @@ def config_parser(file_path, options):
 
     cfg.data.train.loop = cfg.epoch // cfg.eval_epoch
 
-    # cfg.save_path = SAVE_PATH
+    cfg.save_path = SAVE_PATH
 
     os.makedirs(os.path.join(cfg.save_path, "model"), exist_ok=True)
     if not cfg.resume:
