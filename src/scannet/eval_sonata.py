@@ -3,7 +3,7 @@ from pointcept.engines.defaults import (
     default_setup,
     default_config_parser,
 )
-from pointcept.engines.test import TESTERS
+from pointcept.engines.test import TESTERS, SemSegTester
 from pointcept.engines.launch import launch
 from pointcept.utils.config import Config
 import os
@@ -11,6 +11,7 @@ from pointcept.utils.env import get_random_seed, set_seed
 
 import sonata
 from sonata.model import PointTransformerV3
+
 
 
 cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m2-0-sonata-scratch.py"
@@ -47,6 +48,7 @@ def config_parser(file_path, options):
 def main_worker(cfg):
     
     cfg = default_setup(cfg)
+    print(cfg.test)
 
 
     test_cfg = dict(cfg=cfg, **cfg.test)
@@ -55,11 +57,20 @@ def main_worker(cfg):
     cfg.data.val.data_root = DATASET_ROOT
     
     cfg.weight = FAKE_WEIGHTS
-    # sonata_model = PointTransformerV3.from_pretrained(WEIGHTS)
-    tester = TESTERS.build(test_cfg)
-    # cfg.model = sonata_model
-    # tester.model = sonata_model
-    tester.test()
+    # # sonata_model = PointTransformerV3.from_pretrained(WEIGHTS)
+    # tester = TESTERS.build(test_cfg)
+    # # cfg.model = sonata_model
+    # # tester.model = sonata_model
+    # tester.test()
+
+    tester = SemSegTester(
+        cfg=cfg,
+        model=sonata.model.load(WEIGHTS),
+    )
+
+
+
+
 
 
 def main():
