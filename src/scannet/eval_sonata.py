@@ -76,9 +76,6 @@ def main_worker(cfg):
 
 
 
-
-
-
 def main():
     cfg = config_parser(cfg_path, None)
 
