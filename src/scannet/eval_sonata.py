@@ -34,7 +34,7 @@ def config_parser(file_path, options):
 
     cfg.data.train.loop = cfg.epoch // cfg.eval_epoch
 
-    # cfg.save_path = SAVE_PATH
+    cfg.save_path = SAVE_PATH
 
     os.makedirs(os.path.join(cfg.save_path, "model"), exist_ok=True)
     if not cfg.resume:
