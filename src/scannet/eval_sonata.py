@@ -68,6 +68,8 @@ def main_worker(cfg):
         model=sonata.model.load(WEIGHTS),
     )
 
+    tester.test()
+
 
 
 
