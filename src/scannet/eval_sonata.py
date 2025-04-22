@@ -55,7 +55,7 @@ def main_worker(cfg):
     cfg.data.val.data_root = DATASET_ROOT
     
     cfg.weight = FAKE_WEIGHTS
-    sonata_model = PointTransformerV3.from_pretrained(WEIGHTS)
+    # sonata_model = PointTransformerV3.from_pretrained(WEIGHTS)
     tester = TESTERS.build(test_cfg)
     # cfg.model = sonata_model
     # tester.model = sonata_model
