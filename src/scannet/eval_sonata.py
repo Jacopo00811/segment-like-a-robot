@@ -10,6 +10,7 @@ import os
 from pointcept.utils.env import get_random_seed, set_seed
 
 import sonata
+from sonata.model import PointTransformerV3
 
 
 cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
@@ -54,7 +55,7 @@ def main_worker(cfg):
     cfg.data.val.data_root = DATASET_ROOT
     
     cfg.weight = FAKE_WEIGHTS
-    sonata_model = sonata.model.load(WEIGHTS)
+    sonata_model = PointTransformerV3.from_pretrained(WEIGHTS)
     tester = TESTERS.build(test_cfg)
     cfg.model = sonata_model
     tester.model = sonata_model
