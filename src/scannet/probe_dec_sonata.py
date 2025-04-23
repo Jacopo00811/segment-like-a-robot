@@ -56,7 +56,7 @@ def main():
 
     launch(
         main_worker,
-        num_gpus_per_machine=args.num_gpus,
+        num_gpus_per_machine=2,
         num_machines=args.num_machines,
         machine_rank=args.machine_rank,
         dist_url=args.dist_url,
