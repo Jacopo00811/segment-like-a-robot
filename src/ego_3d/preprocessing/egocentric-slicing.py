@@ -8,13 +8,13 @@ from tqdm import tqdm
 
 from sens_reader.SensorData import SensorData
 
-PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/val/') # Ego-sliced processed scenes storage
+PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/test/') # Ego-sliced processed scenes storage
 PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/')
 RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
 RAW_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/raw/val/')
 
 # Testing
-# PROCESSED_OUTPUT_DIR = Path('data/processed') # Ego-sliced processed scenes storage
+# PROCESSED_OUTPUT_DIR = Path('data/raw') # Ego-sliced processed scenes storage
 # PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/')
 # RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
 
@@ -357,7 +357,7 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
         # o3d.io.write_point_cloud(str(out_filename), filtered_pcd)
 
         # Saving Preprocessed
-        processed_out_dir = PROCESSED_OUTPUT_DIR / scene_name / f"filtered_point_cloud_slice_{i:03d}"
+        processed_out_dir = PROCESSED_OUTPUT_DIR / f"{scene_name}_slice_{i:03d}"
         processed_out_dir.mkdir(parents=True, exist_ok=True)
         np.save(os.path.join(str(processed_out_dir), "coord.npy"), filtered_coords)
         np.save(os.path.join(str(processed_out_dir), "color.npy"), filtered_colors)
@@ -389,6 +389,7 @@ if __name__ == "__main__":
     
     # loop over each scene directory in the preprocessed validation folder
     # ignore sub directories
+
     for scene_dir in tqdm(PREPROCESSED_BASE_DIR.iterdir()):
         if scene_dir.is_dir():
             scene_name = scene_dir.name
