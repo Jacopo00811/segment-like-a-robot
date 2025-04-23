@@ -9,16 +9,12 @@ from pointcept.utils.config import Config
 import os
 from pointcept.utils.env import get_random_seed, set_seed
 
-import sonata
-from sonata.model import PointTransformerV3
 
 
-
-cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m2-0-sonata-scratch.py"
-FAKE_WEIGHTS = "./models/sonata/sonata.pth"
-WEIGHTS = "./models/sonata/sonata.pth"
+cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0c-scannet-ft.py"
+WEIGHTS = "./models/sonata/pretrain-sonata-v1m1-0-base.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
-SAVE_PATH = "./exp/sonata"
+SAVE_PATH = "./exp/sonata_untuned"
 
 def config_parser(file_path, options):
     # config name protocol: dataset_name/model_name-exp_name
@@ -48,31 +44,18 @@ def config_parser(file_path, options):
 def main_worker(cfg):
     
     cfg = default_setup(cfg)
-    print(cfg.test)
 
 
     test_cfg = dict(cfg=cfg, **cfg.test)
     cfg.test.data_root = DATASET_ROOT
     cfg.data.test.data_root = DATASET_ROOT
     cfg.data.val.data_root = DATASET_ROOT
-    
-    cfg.weight = FAKE_WEIGHTS
-    # # sonata_model = PointTransformerV3.from_pretrained(WEIGHTS)
-    # tester = TESTERS.build(test_cfg)
-    # # cfg.model = sonata_model
-    # # tester.model = sonata_model
-    # tester.test()
-    sonata_model = sonata.model.load(WEIGHTS)
-    print(f"Old device: {sonata_model.parameters()}")
-    sonata_model = sonata_model.to('cuda')
-    print(f"New device: {sonata_model.parameters()}")
 
-    tester = SemSegTester(
-        cfg=cfg,
-        model=sonata_model,
-    )
+    cfg.weight = WEIGHTS
 
+    tester = TESTERS.build(test_cfg)    
     tester.test()
+
 
 
 
