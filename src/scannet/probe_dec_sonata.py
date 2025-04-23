@@ -9,10 +9,10 @@ from pointcept.utils.config import Config
 import os
 from pointcept.utils.env import get_random_seed, set_seed
 
-cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0b-scannet-dec.py"
+cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0a-scannet-lin.py"
 WEIGHTS = "./models/sonata/pretrain-sonata-v1m1-0-base.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
-SAVE_PATH = "./exp/sonata-dec-scannet"
+SAVE_PATH = "./exp/sonata-lin-scannet"
 
 
 def config_parser(file_path, options):
