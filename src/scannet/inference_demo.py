@@ -75,3 +75,6 @@ def main():
         dist_url="auto",
         cfg=(cfg,),
     )
+
+if __name__ == "__main__":
+    main()
