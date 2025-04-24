@@ -9,10 +9,10 @@ from pointcept.utils.config import Config
 import os
 from pointcept.utils.env import get_random_seed, set_seed
 
-cfg_path = "./Pointcept/configs/scannet/semseg-swin3d-v1m1-1-large.py"
-WEIGHTS = "./models/swin3d/Swin3D_RGBN_L.pth"
+cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-1-ppt-extreme.py"
+WEIGHTS = "./models/PointTransformer_V3/ppt-extreme-best.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
-SAVE_PATH = "./exp/swin3d"
+SAVE_PATH = "./exp/pt3-ppt-extreme"
 
 
 def config_parser(file_path, options):
