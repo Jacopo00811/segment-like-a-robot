@@ -1,5 +1,6 @@
 import sonata
 import torch
+from pointcept.utils.config import Config
 
 from pointcept.engines.otta import OnlineSemSegTester
 import os
