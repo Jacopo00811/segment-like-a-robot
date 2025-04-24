@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from sens_reader.SensorData import SensorData
 
-PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/test/') # Ego-sliced processed scenes storage
+PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/val/') # Ego-sliced processed scenes storage
 PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/')
 RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
 RAW_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/raw/val/')
