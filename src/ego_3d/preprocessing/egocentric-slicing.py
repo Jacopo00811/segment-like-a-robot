@@ -11,7 +11,6 @@ from sens_reader.SensorData import SensorData
 PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/val/') # Ego-sliced processed scenes storage
 PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/')
 RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
-RAW_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/raw/val/')
 
 # Testing
 # PROCESSED_OUTPUT_DIR = Path('data/raw') # Ego-sliced processed scenes storage
@@ -81,24 +80,24 @@ def print_point_cloud_stats(point_cloud):
     colors = np.asarray(point_cloud.colors)
     normals = np.asarray(point_cloud.normals)
 
-    print("--------------- SHAPE ---------------")
-    print(points.shape, colors.shape, normals.shape)
-    print("--------------- DATA ---------------")
-    print(points[:5, :], colors[:5, :], normals[:5, :])
-    print("--------------- CHECK NAN VALUES ---------------")
-    print(np.isnan(points).any(), np.isnan(colors).any(), np.isnan(normals).any())
-    print("--------------- BOUNDARIES ---------------")
-    # Do not count NaN values
-    print(f"POINTS - Min: {np.nanmin(points, axis=0)} Max: {np.nanmax(points, axis=0)}")
-    print(f"COLORS - Min: {np.nanmin(colors, axis=0)} Max: {np.nanmax(colors, axis=0)}")
-    print(f"NORMS - Min: {np.nanmin(normals, axis=0)} Max: {np.nanmax(normals, axis=0)}")
-    print(f"POINTS - Min: {points.min(axis=0)} Max: {points.max(axis=0)}")
-    print(f"COLORS - Min: {colors.min(axis=0)} Max: {colors.max(axis=0)}")
-    print(f"NORMS - Min: {normals.min(axis=0)} Max: {normals.max(axis=0)}")
-    print("--------------- SIZE ---------------")
-    print(f"POINTS: {points.nbytes / 1e6} MB")
-    print(f"COLORS: {colors.nbytes / 1e6} MB")
-    print(f"NORMS: {normals.nbytes / 1e6} MB")
+    # print("--------------- SHAPE ---------------")
+    # print(points.shape, colors.shape, normals.shape)
+    # print("--------------- DATA ---------------")
+    # print(points[:5, :], colors[:5, :], normals[:5, :])
+    # print("--------------- CHECK NAN VALUES ---------------")
+    # print(np.isnan(points).any(), np.isnan(colors).any(), np.isnan(normals).any())
+    # print("--------------- BOUNDARIES ---------------")
+    # # Do not count NaN values
+    # print(f"POINTS - Min: {np.nanmin(points, axis=0)} Max: {np.nanmax(points, axis=0)}")
+    # print(f"COLORS - Min: {np.nanmin(colors, axis=0)} Max: {np.nanmax(colors, axis=0)}")
+    # print(f"NORMS - Min: {np.nanmin(normals, axis=0)} Max: {np.nanmax(normals, axis=0)}")
+    # print(f"POINTS - Min: {points.min(axis=0)} Max: {points.max(axis=0)}")
+    # print(f"COLORS - Min: {colors.min(axis=0)} Max: {colors.max(axis=0)}")
+    # print(f"NORMS - Min: {normals.min(axis=0)} Max: {normals.max(axis=0)}")
+    # print("--------------- SIZE ---------------")
+    # print(f"POINTS: {points.nbytes / 1e6} MB")
+    # print(f"COLORS: {colors.nbytes / 1e6} MB")
+    # print(f"NORMS: {normals.nbytes / 1e6} MB")
 
 
 def cut_point_cloud(point_cloud, camera_pos, phi, theta, dubleAlpha, dubleBeta):
@@ -311,10 +310,10 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
     original_pcd.points = o3d.utility.Vector3dVector(coords)
     original_pcd.colors = o3d.utility.Vector3dVector(colors_vis)
     original_pcd.normals = o3d.utility.Vector3dVector(normals)
-    # o3d.io.write_point_cloud(str(PROCESSED_OUTPUT_DIR / "original_point_cloud.ply"), original_pcd)
     
     # determine the .sens file path.
-    if path_to_sens_file.exists(): camera_poses = extract_camera_poses(scene_name, path_to_sens_file)
+    if path_to_sens_file.exists(): 
+        camera_poses = extract_camera_poses(scene_name, path_to_sens_file)
     else:
         print(f"[ERROR] Sens file {path_to_sens_file} not found. Using default camera pose.")
         pose1 = np.eye(4)
@@ -322,39 +321,33 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
         pose2[:3, 3] = np.array([0.5, 0.0, 0.0])  # sample shift in x-direction
         camera_poses = [pose1, pose2]
     
+    # Select 15 equally spaced poses
+    total_poses = len(camera_poses)
+    
+    if total_poses <= 15:
+        # If we have fewer than 15 poses, use all of them
+        selected_poses = camera_poses
+    else:
+        # Calculate indices for 15 equally spaced poses
+        indices = np.linspace(0, total_poses - 1, 15, dtype=int)
+        selected_poses = [camera_poses[i] for i in indices]
+    
+    # print(f"Selected {len(selected_poses)} poses out of {total_poses} total poses")
+    
     # define the camera position and angular parameters for slicing.
-    # camera_pos = np.array([1.0, 0.3, 0.6]) # testing
     phi = 90         # Angle on the xy-plane (degrees)
     theta = 90       # Angle from vertical (degrees)
     dubleAlpha = 130 # Horizontal field of view (degrees)
     dubleBeta = 150  # Vertical field of view (degrees)
     
-    # # perform slicing: filter the raw point cloud arrays based on view angles.
-    # filtered_coords, filtered_colors, filtered_instances, filtered_normals, filtered_segment20, filtered_segment200 = cut_point_cloud_npy(
-    #     coords, colors, instances, normals, segment20, segment200,
-    #     camera_pos, phi, theta, dubleAlpha, dubleBeta
-    # )
-    
-    
-    # loop over every camera pose and slice the point cloud accordingly.
-    for i, pose in enumerate(camera_poses):
+    # loop over selected camera poses and slice the point cloud accordingly.
+    for i, pose in enumerate(selected_poses):
         camera_pos = pose[:3, 3]  # extract the translation (camera position)
         (filtered_coords, filtered_colors, filtered_instances,
          filtered_normals, filtered_segment20, filtered_segment200) = cut_point_cloud_npy(
             coords, colors, instances, normals, segment20, segment200,
             camera_pos, phi, theta, dubleAlpha, dubleBeta
         )
-
-        # saving raw
-        # filtered_pcd = o3d.geometry.PointCloud()
-        # filtered_pcd.points = o3d.utility.Vector3dVector(filtered_coords)
-        # filtered_pcd.colors = o3d.utility.Vector3dVector(filtered_colors)
-        # filtered_pcd.normals = o3d.utility.Vector3dVector(filtered_normals)
-        
-        # out_dir = RAW_OUTPUT_DIR / scene_name
-        # out_dir.mkdir(parents=True, exist_ok=True)
-        # out_filename = out_dir / f"filtered_point_cloud_slice_{i:03d}.ply"
-        # o3d.io.write_point_cloud(str(out_filename), filtered_pcd)
 
         # Saving Preprocessed
         processed_out_dir = PROCESSED_OUTPUT_DIR / f"{scene_name}_slice_{i:03d}"
@@ -366,14 +359,11 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
         np.save(os.path.join(str(processed_out_dir), "segment20.npy"), filtered_segment20)
         np.save(os.path.join(str(processed_out_dir), "segment200.npy"), filtered_segment200)
 
-        # print(f"Slice {i} saved to {out_filename}")
-    
-    print("Slicing complete. Filtered point cloud have been saved.")
+    # print("Slicing complete. 15 filtered point clouds have been saved.")
 
 if __name__ == "__main__":
     
     print(PROCESSED_OUTPUT_DIR)
-    print(RAW_OUTPUT_DIR)
     
     """
     We will only use the validation scene/scan set for now. The preprocessed data
@@ -390,10 +380,12 @@ if __name__ == "__main__":
     # loop over each scene directory in the preprocessed validation folder
     # ignore sub directories
 
-    for scene_dir in tqdm(PREPROCESSED_BASE_DIR.iterdir()):
+    scene_dirs = [scene_dir for scene_dir in PREPROCESSED_BASE_DIR.iterdir() if scene_dir.is_dir()]
+    
+    for scene_dir in tqdm(scene_dirs, desc="Slicing Scenes", unit="scene"):
         if scene_dir.is_dir():
             scene_name = scene_dir.name
-            print(f"Processing scene: {scene_name}")
+            # print(f"Processing scene: {scene_name}")
             
             # construct the path to the .sens file for that scene from the raw scans folder
             path_to_sens_file = RAW_SCANS_BASE_DIR / scene_name / f"{scene_name}.sens"
