@@ -185,5 +185,5 @@ cython_debug/
 externals/sparsehash/
 *.pth
 *.ckpt
-
+ft-sonata.sh
 exp/

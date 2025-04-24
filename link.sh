@@ -1,1 +1,0 @@
-ln -s /dtu/blackhole/0e/169006/ScanNet/mask3d-preprocessed /zhome/c8/c/169006/Repos/segment-like-a-robot/data/processed

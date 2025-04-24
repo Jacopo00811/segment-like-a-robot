@@ -3,16 +3,18 @@ from pointcept.engines.defaults import (
     default_setup,
     default_config_parser,
 )
-from pointcept.engines.test import TESTERS
+from pointcept.engines.test import TESTERS, SemSegTester
 from pointcept.engines.launch import launch
 from pointcept.utils.config import Config
 import os
 from pointcept.utils.env import get_random_seed, set_seed
 
-cfg_path = "./Pointcept/configs/sonata/pretrain-sonata-v1m1-0-base.py"
-WEIGHTS = "./models/sonata/pretrain-sonata-v1m1-0-base.pth"
+
+
+cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0a-scannet-lin.py"
+WEIGHTS = "./exp/sonata-lin-scannet/model/model_best.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed"
-SAVE_PATH = "./exp/sonata"
+SAVE_PATH = "./exp/sonata-lin-scannet"
 
 def config_parser(file_path, options):
     # config name protocol: dataset_name/model_name-exp_name
@@ -38,6 +40,7 @@ def config_parser(file_path, options):
     return cfg
 
 
+
 def main_worker(cfg):
     
     cfg = default_setup(cfg)
@@ -50,16 +53,23 @@ def main_worker(cfg):
 
     cfg.weight = WEIGHTS
 
-    tester = TESTERS.build(test_cfg)
+    tester = TESTERS.build(test_cfg)    
     tester.test()
 
 
 
 
 def main():
-    cfg = default_config_parser(cfg_path, None)
+    cfg = config_parser(cfg_path, None)
 
-    
+    launch(
+        main_worker,
+        num_gpus_per_machine=1,
+        num_machines=1,
+        machine_rank=0,
+        dist_url='auto',
+        cfg=(cfg,),
+    )
 
 
 if __name__ == "__main__":

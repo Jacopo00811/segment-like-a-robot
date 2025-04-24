@@ -8,8 +8,8 @@ from tqdm import tqdm
 
 from sens_reader.SensorData import SensorData
 
-PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/val/') # Ego-sliced processed scenes storage
-PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/val/')
+PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/train/') # Ego-sliced processed scenes storage
+PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/train/')
 RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
 
 # Testing
@@ -381,6 +381,10 @@ if __name__ == "__main__":
     # ignore sub directories
 
     scene_dirs = [scene_dir for scene_dir in PREPROCESSED_BASE_DIR.iterdir() if scene_dir.is_dir()]
+
+    # Take only the first 10 scenes for fine-tuning due to time and space limitations
+
+    scene_dirs = scene_dirs[:10]
     
     for scene_dir in tqdm(scene_dirs, desc="Slicing Scenes", unit="scene"):
         if scene_dir.is_dir():
