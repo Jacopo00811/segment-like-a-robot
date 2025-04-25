@@ -11,7 +11,7 @@ from pointcept.utils.env import get_random_seed, set_seed
 
 cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base.py"
 WEIGHTS = "./models/PointTransformer_V3/model_best.pth"
-DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/"
+DATASET_ROOT = "/dtu/blackhole/0e/169006/Mini-ScanNet/ego_sliced/preprocessed"
 SAVE_PATH = "./exp/ego/ptv3"
 
 

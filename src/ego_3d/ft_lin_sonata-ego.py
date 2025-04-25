@@ -11,7 +11,7 @@ from pointcept.utils.env import get_random_seed, set_seed
 
 cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0a-scannet-lin.py"
 WEIGHTS = "./models/sonata/pretrain-sonata-v1m1-0-base.pth"
-DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/"
+DATASET_ROOT = "/dtu/blackhole/0e/169006/Mini-ScanNet/ego_sliced/preprocessed/"
 SAVE_PATH = "./exp/ego/sonata-lin-ego"
 
 
@@ -56,7 +56,7 @@ def main():
 
     launch(
         main_worker,
-        num_gpus_per_machine=2,
+        num_gpus_per_machine=1,
         num_machines=args.num_machines,
         machine_rank=args.machine_rank,
         dist_url=args.dist_url,

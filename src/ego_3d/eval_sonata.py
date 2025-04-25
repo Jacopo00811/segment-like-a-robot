@@ -12,8 +12,8 @@ from pointcept.utils.env import get_random_seed, set_seed
 
 
 cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0a-scannet-lin.py"
-WEIGHTS = "./exp/sonata-lin-scannet/model/model_best.pth"
-DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/"
+WEIGHTS = "./exp/scannet/sonata-lin-scannet/model/model_best.pth"
+DATASET_ROOT = "/dtu/blackhole/0e/169006/Mini-ScanNet/ego_sliced/preprocessed/"
 SAVE_PATH = "./exp/ego/sonata-lin-scannet"
 
 def config_parser(file_path, options):
