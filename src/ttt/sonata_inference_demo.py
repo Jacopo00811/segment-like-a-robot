@@ -153,7 +153,7 @@ if __name__ == "__main__":
     point["segment"] = segment  # two kinds of segment exist in ScanNet, only use one
     original_coord = point["coord"].copy()
     point = transform(point)
-    
+    print(original_coord)
     device = torch.device("cuda")
     model = model.to(device)
     seg_head = seg_head.to(device)
