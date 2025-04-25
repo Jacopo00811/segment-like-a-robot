@@ -357,7 +357,7 @@ def extract_camera_poses(scene_name, sens_file):
     # Now load the poses from the text files
     return load_camera_poses(poses_root, scene_name)
     
-def ego_slice(scene_name, path_to_scene, path_to_sens_file, no_slices=15):    
+def ego_slice(scene_name, path_to_scene, path_to_sens_file, no_slices=10):    
     # ensure the output directory exists
     PROCESSED_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
@@ -407,11 +407,9 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file, no_slices=15):
     dubleAlpha = 130 # Horizontal field of view (degrees)
     dubleBeta = 150  # Vertical field of view (degrees)
     
-    # loop over selected camera poses and slice the point cloud accordingly.
-    for i, pose in enumerate(selected_poses):
-
-
-        try:
+    try:
+        # loop over selected camera poses and slice the point cloud accordingly.
+        for i, pose in enumerate(selected_poses):
             camera_pos = pose[:3, 3]  # extract the translation (camera position)
             (filtered_coords, filtered_colors, filtered_instances,
             filtered_normals, filtered_segment20, filtered_segment200) = cut_point_cloud_npy(
@@ -428,12 +426,11 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file, no_slices=15):
             np.save(os.path.join(str(processed_out_dir), "normal.npy"), filtered_normals)
             np.save(os.path.join(str(processed_out_dir), "segment20.npy"), filtered_segment20)
             np.save(os.path.join(str(processed_out_dir), "segment200.npy"), filtered_segment200)
-        except Exception as e:
-            print(f"Error Slicing current pointcloud: {e}")
-            print("skipping this one")
-            return False
-        
-        return True
+    except Exception as e:
+        print(f"Error occured: {e}")
+        return False
+    
+    return True
 
     # print("Slicing complete. 15 filtered point clouds have been saved.")
 
@@ -447,14 +444,14 @@ if __name__ == "__main__":
     # Initialize total scenes counter and the set of processed scenes
     processed_scenes = set()
     successful_scenes = 0
-    target_successful_scenes = 200
+    target_successful_scenes = int(len(scene_dirs) / 2)
     
     # Create a queue of scenes to process
     scene_queue = scene_dirs[:target_successful_scenes].copy()
     next_scene_index = target_successful_scenes
     
     # Process scenes from the queue until we have enough successful scenes or run out of scenes
-    with tqdm(total=target_successful_scenes, desc="Processing Scenes", unit="scene") as pbar:
+    with tqdm(total=len(scene_queue), desc="Processing Scenes", unit="scene") as pbar:
         while scene_queue and successful_scenes < target_successful_scenes:
             # Get the next scene from the queue
             scene_dir = scene_queue.pop(0)

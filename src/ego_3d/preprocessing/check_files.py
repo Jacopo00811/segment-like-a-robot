@@ -21,7 +21,7 @@ def count_scenes(directory_path):
     return len(unique_scenes)
 
 # Replace with the path to your 'preprocessed/test' directory
-directory_path = '/dtu/blackhole/0e/169006/Mini-ScanNet/ego_sliced/preprocessed/val'
+directory_path = '/dtu/blackhole/0e/169006/Mini-ScanNet/ego_sliced/preprocessed/train'
 scene_count = count_scenes(directory_path)
 
 print(f"Number of unique scenes: {scene_count}")
