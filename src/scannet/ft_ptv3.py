@@ -58,18 +58,26 @@ def main():
     cfg = config_parser(cfg_path, None)
 
     cfg.epoch = 10
-    cfg.eval_epoch = 10
+    cfg.eval_epoch = 1
     cfg.data.train.loop = 1
     
+    cfg.test = dict(
+        type='SemSegTester',
+        verbose=True
+    )
+    
+    for i, hook in enumerate(cfg.hooks):
+        if hook.get('type') == 'PreciseEvaluator':
+            cfg.hooks[i] = dict(type='CheckpointSaver', save_freq=None)
+    
     launch(
-        main_worker,
+        main_worker,    
         num_gpus_per_machine=1,
         num_machines=args.num_machines,
         machine_rank=args.machine_rank,
         dist_url=args.dist_url,
         cfg=(cfg,),
     )
-
 
 if __name__ == "__main__":
     main()

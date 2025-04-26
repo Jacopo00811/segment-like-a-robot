@@ -8,7 +8,7 @@
 #BSUB -B
 #BSUB -N
 #BSUB -gpu "num=1:mode=exclusive_process"
-#BSUB -W 00:30
+#BSUB -W 06:00
 #BSUB -o exp/scannet/ft/ptv3/ft_ptv3_scannet%J.out
 #BSUB -e exp/scannet/ft/ptv3/ft_ptv3_scannet%J.err
 
