@@ -3,18 +3,17 @@ from pointcept.engines.defaults import (
     default_setup,
     default_config_parser,
 )
-from pointcept.engines.test import TESTERS, SemSegTester
+from pointcept.engines.train import TRAINERS
 from pointcept.engines.launch import launch
 from pointcept.utils.config import Config
 import os
 from pointcept.utils.env import get_random_seed, set_seed
 
+cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base-ft.py"
+WEIGHTS = "./models/PointTransformer_V3/model_best.pth"
+DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed/"
+SAVE_PATH = "./exp/scannet/ft/ptv3"
 
-
-cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0a-scannet-lin.py"
-WEIGHTS = "./exp/sonata-lin-scannet/model/model_best.pth"
-DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/"
-SAVE_PATH = "./exp/ego/sonata-lin-scannet"
 
 def config_parser(file_path, options):
     # config name protocol: dataset_name/model_name-exp_name
@@ -42,32 +41,32 @@ def config_parser(file_path, options):
 
 
 def main_worker(cfg):
-    
     cfg = default_setup(cfg)
-
-
-    test_cfg = dict(cfg=cfg, **cfg.test)
-    cfg.test.data_root = DATASET_ROOT
+        
     cfg.data.test.data_root = DATASET_ROOT
     cfg.data.val.data_root = DATASET_ROOT
+    cfg.data.train.data_root = DATASET_ROOT
 
     cfg.weight = WEIGHTS
 
-    tester = TESTERS.build(test_cfg)    
-    tester.test()
-
-
+    trainer = TRAINERS.build(dict(type=cfg.train.type, cfg=cfg))
+    trainer.train()
 
 
 def main():
+    args = default_argument_parser().parse_args()
     cfg = config_parser(cfg_path, None)
 
+    cfg.epoch = 10
+    cfg.eval_epoch = 10
+    cfg.data.train.loop = 1
+    
     launch(
         main_worker,
         num_gpus_per_machine=1,
-        num_machines=1,
-        machine_rank=0,
-        dist_url='auto',
+        num_machines=args.num_machines,
+        machine_rank=args.machine_rank,
+        dist_url=args.dist_url,
         cfg=(cfg,),
     )
 
