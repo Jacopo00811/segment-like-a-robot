@@ -58,7 +58,7 @@ def main():
     cfg = config_parser(cfg_path, None)
 
     cfg.epoch = 10
-    cfg.eval_epoch = 1
+    cfg.eval_epoch = 10
     cfg.data.train.loop = 1
     
     cfg.test = dict(
