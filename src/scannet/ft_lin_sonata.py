@@ -55,8 +55,8 @@ def main():
     args = default_argument_parser().parse_args()
     cfg = config_parser(cfg_path, None)
 
-    cfg.epoch = 10
-    cfg.eval_epoch = 10
+    cfg.epoch = 30
+    cfg.eval_epoch = 30
     cfg.data.train.loop = 1
     
     cfg.test = dict(
@@ -70,8 +70,8 @@ def main():
     
     launch(
         main_worker,    
-        num_gpus_per_machine=1,
-        num_machines=args.num_machines,
+        num_gpus_per_machine=2,
+        num_machines=1,
         machine_rank=args.machine_rank,
         dist_url=args.dist_url,
         cfg=(cfg,),

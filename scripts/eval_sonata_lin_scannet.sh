@@ -9,7 +9,7 @@
 #BSUB -B
 #BSUB -N
 #BSUB -gpu "num=1:mode=exclusive_process"
-#BSUB -W 01:00
+#BSUB -W 00:30
 #BSUB -o exp/scannet/eval/sonata-lin/eval_sonata_lin_scannet%J.out
 #BSUB -e exp/scannet/eval/sonata-lin/eval_sonata_lin_scannet%J.err
 

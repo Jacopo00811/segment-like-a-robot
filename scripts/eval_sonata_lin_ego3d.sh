@@ -5,7 +5,6 @@
 #BSUB -R "span[hosts=1]"
 #BSUB -R "rusage[mem=8GB]"
 #BSUB -u s215158@dtu.dk
-#BSUB -w ft_sonata_lin_ego3d
 #BSUB -B
 #BSUB -N
 #BSUB -gpu "num=1:mode=exclusive_process"
