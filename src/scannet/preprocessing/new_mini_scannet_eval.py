@@ -42,17 +42,17 @@ def main():
         for scene in sorted(missing_scenes):
             print(f"- {scene}")
             
-            # # Check if scene exists in the main ScanNet dataset
-            # source_path = os.path.join(SOURCE_DIR, scene)
-            # if os.path.exists(source_path) and os.path.isdir(source_path):
-            #     print(f"  Found in source directory - copying...")
-            #     try:
-            #         shutil.copytree(source_path, os.path.join(UNSLICED_DIR, scene))
-            #         print(f"  Successfully copied {scene}")
-            #     except Exception as e:
-            #         print(f"  Error copying: {str(e)}")
-            # else:
-            #     print(f"  NOT FOUND in source directory: {SOURCE_DIR}")
+            # Check if scene exists in the main ScanNet dataset
+            source_path = os.path.join(SOURCE_DIR, scene)
+            if os.path.exists(source_path) and os.path.isdir(source_path):
+                print(f"  Found in source directory - copying...")
+                try:
+                    shutil.copytree(source_path, os.path.join(UNSLICED_DIR, scene))
+                    print(f"  Successfully copied {scene}")
+                except Exception as e:
+                    print(f"  Error copying: {str(e)}")
+            else:
+                print(f"  NOT FOUND in source directory: {SOURCE_DIR}")
     
     # Process extra scenes
     if extra_scenes:
@@ -65,20 +65,20 @@ def main():
     
     print("\nDone!")
     
-    # # Safety prompt before making changes
-    # if missing_scenes or extra_scenes:
-    #     choice = input("\nDo you want to:\n"
-    #                   "1. Copy missing scenes (if found)\n"
-    #                   "2. Remove extra scenes\n"
-    #                   "3. Do both\n"
-    #                   "4. Do nothing\n"
-    #                   "Enter your choice (1-4): ")
+    # Safety prompt before making changes
+    if missing_scenes or extra_scenes:
+        choice = input("\nDo you want to:\n"
+                      "1. Copy missing scenes (if found)\n"
+                      "2. Remove extra scenes\n"
+                      "3. Do both\n"
+                      "4. Do nothing\n"
+                      "Enter your choice (1-4): ")
         
-    #     if choice == '1' or choice == '3':
-    #         copy_missing_scenes(missing_scenes, SOURCE_DIR, UNSLICED_DIR)
+        if choice == '1' or choice == '3':
+            copy_missing_scenes(missing_scenes, SOURCE_DIR, UNSLICED_DIR)
         
-    #     if choice == '2' or choice == '3':
-    #         remove_extra_scenes(extra_scenes, UNSLICED_DIR)
+        if choice == '2' or choice == '3':
+            remove_extra_scenes(extra_scenes, UNSLICED_DIR)
 
 def copy_missing_scenes(missing_scenes, source_dir, dest_dir):
     print("\nCopying missing scenes...")
