@@ -25,7 +25,7 @@ dependencies = [
   "plyfile>=1.1",
   "pypng>=0.20220715.0",
   "ruff>=0.11.0",
-  "torch==2.5.1",
+  "torch==2.7.0",
   "typer==0.15.2",
 ]
 
