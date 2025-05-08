@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from sens_reader.SensorData import SensorData
 
-PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/train/') # Ego-sliced processed scenes storage
+PROCESSED_OUTPUT_DIR = Path('/dtu/blackhole/0e/169006/Mini-ScanNet/ego_sliced/preprocessed/train/') # Ego-sliced processed scenes storage
 PREPROCESSED_BASE_DIR = Path('/dtu/blackhole/0e/169006/ScanNet/preprocessed/train/')
 RAW_SCANS_BASE_DIR = Path('/dtu/datasets2/ScanNet/ScanNetV2/scans/')
 
@@ -163,6 +163,8 @@ def cut_point_cloud_npy(
 ):
     """
     Cut the point cloud based on the camera position and the specified angles.
+    Modified to handle edge cases and prevent invalid values.
+    
     Args:
         coords: np.array of shape (N, 3) with XYZ coordinates
         colors: np.array of shape (N, 3) with RGB values
@@ -178,24 +180,60 @@ def cut_point_cloud_npy(
 
     Returns:
         Tuple of filtered arrays (coords, colors, instances, normals, segment20, segment200)
+        or None if the resulting point cloud doesn't meet quality criteria
     """
+    # Check input point cloud for NaN values
+    if np.isnan(coords).any():
+        print("Warning: Input coordinates contain NaN values. Removing them...")
+        valid_mask = ~np.isnan(coords).any(axis=1)
+        coords = coords[valid_mask]
+        colors = colors[valid_mask]
+        instances = instances[valid_mask]
+        normals = normals[valid_mask]
+        segment20 = segment20[valid_mask]
+        segment200 = segment200[valid_mask]
+        
+        # If no valid points remain after removing NaNs, return None
+        if len(coords) == 0:
+            print("Error: No valid points remain after removing NaN values.")
+            return None
+    
     # Convert all angles to radians
     phi = np.radians(phi)
     theta = np.radians(theta)
     dubleAlpha = np.radians(dubleAlpha)
     dubleBeta = np.radians(dubleBeta)
 
-    # Scale colors in 0-1 range
-    colors = colors / 255
+    # Scale colors to 0-1 range
+    colors = colors / 255.0
 
     # Shift the origin to the camera position
     points_centered = coords - camera_pos
 
+    # Add a small epsilon to avoid division by zero when calculating angles
+    epsilon = 1e-10
+    
     # Calculate angle on the xy-plane and check if the point is inside the alpha range
+    # Use arctan2 safely by ensuring denominator is not zero
+    xy_norm = np.sqrt(points_centered[:, 0]**2 + points_centered[:, 1]**2)
+    
+    # Calculate gammas safely
     gammas = np.arctan2(points_centered[:, 1], points_centered[:, 0]) % (2 * np.pi)
+    
+    # Handle the case where points are directly above/below the camera
+    # These points would have undefined xy-plane angle, so we'll use a default
+    zero_xy = xy_norm < epsilon
+    if np.any(zero_xy):
+        gammas[zero_xy] = phi  # Assign them the viewing direction phi
+    
     is_inside_alpha = np.logical_and(gammas >= phi - dubleAlpha / 2, gammas <= phi + dubleAlpha / 2)
 
     # Keep only the points that are inside the alpha range
+    # First check if we have any valid points
+    if not np.any(is_inside_alpha):
+        print("Warning: No points fall within the horizontal field of view.")
+        return None
+    
     points_centered = points_centered[is_inside_alpha]
     filtered_colors = colors[is_inside_alpha]
     filtered_instances = instances[is_inside_alpha]
@@ -204,21 +242,50 @@ def cut_point_cloud_npy(
     filtered_segment200 = segment200[is_inside_alpha]
     gammas = gammas[is_inside_alpha]
 
-    # Calculate the angle between the z-axis and the point
+    # Calculate the angle between the z-axis and the point safely
+    xy_norm = np.sqrt(points_centered[:, 0]**2 + points_centered[:, 1]**2)
     omegas = np.arctan2(
-        np.sqrt(np.pow(points_centered[:, 0], 2) + np.pow(points_centered[:, 1], 2)) * np.cos(phi - gammas),
-        points_centered[:, 2],
+        xy_norm * np.cos(phi - gammas),
+        np.maximum(points_centered[:, 2], epsilon)  # Avoid division by zero
     )
+    
     is_inside_beta = np.logical_and(omegas >= theta - dubleBeta / 2, omegas <= theta + dubleBeta / 2)
-
-    # Keep only the points that are also inside the beta range and shift the origin back to the camera position
+    
+    # If no points are inside beta range, return None
+    if not np.any(is_inside_beta):
+        print("Warning: No points fall within the vertical field of view.")
+        return None
+    
+    # Keep only the points that are also inside the beta range and shift the origin back
     filtered_coords = points_centered[is_inside_beta] + camera_pos
     filtered_colors = filtered_colors[is_inside_beta]
     filtered_instances = filtered_instances[is_inside_beta]
     filtered_normals = filtered_normals[is_inside_beta]
     filtered_segment20 = filtered_segment20[is_inside_beta]
     filtered_segment200 = filtered_segment200[is_inside_beta]
-
+    
+    # Final validation: ensure we have enough points and no NaNs
+    if len(filtered_coords) < 100:  # Minimum points threshold
+        print(f"Warning: Insufficient points ({len(filtered_coords)}) after filtering.")
+        return None
+    
+    # Do one final NaN check
+    if np.isnan(filtered_coords).any():
+        valid_mask = ~np.isnan(filtered_coords).any(axis=1)
+        filtered_coords = filtered_coords[valid_mask]
+        filtered_colors = filtered_colors[valid_mask]
+        filtered_instances = filtered_instances[valid_mask]
+        filtered_normals = filtered_normals[valid_mask]
+        filtered_segment20 = filtered_segment20[valid_mask]
+        filtered_segment200 = filtered_segment200[valid_mask]
+        
+        if len(filtered_coords) < 100:
+            print("Warning: Too few points remain after removing NaNs from filtered result.")
+            return None
+    
+    # Ensure colors are properly scaled between 0-1
+    filtered_colors = np.clip(filtered_colors, 0, 1)
+    
     return (
         filtered_coords,
         filtered_colors,
@@ -290,7 +357,7 @@ def extract_camera_poses(scene_name, sens_file):
     # Now load the poses from the text files
     return load_camera_poses(poses_root, scene_name)
     
-def ego_slice(scene_name, path_to_scene, path_to_sens_file):    
+def ego_slice(scene_name, path_to_scene, path_to_sens_file, no_slices=15):    
     # ensure the output directory exists
     PROCESSED_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
@@ -324,12 +391,12 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
     # Select 15 equally spaced poses
     total_poses = len(camera_poses)
     
-    if total_poses <= 15:
+    if total_poses <= no_slices:
         # If we have fewer than 15 poses, use all of them
         selected_poses = camera_poses
     else:
         # Calculate indices for 15 equally spaced poses
-        indices = np.linspace(0, total_poses - 1, 15, dtype=int)
+        indices = np.linspace(0, total_poses - 1, no_slices, dtype=int)
         selected_poses = [camera_poses[i] for i in indices]
     
     # print(f"Selected {len(selected_poses)} poses out of {total_poses} total poses")
@@ -342,22 +409,31 @@ def ego_slice(scene_name, path_to_scene, path_to_sens_file):
     
     # loop over selected camera poses and slice the point cloud accordingly.
     for i, pose in enumerate(selected_poses):
-        camera_pos = pose[:3, 3]  # extract the translation (camera position)
-        (filtered_coords, filtered_colors, filtered_instances,
-         filtered_normals, filtered_segment20, filtered_segment200) = cut_point_cloud_npy(
-            coords, colors, instances, normals, segment20, segment200,
-            camera_pos, phi, theta, dubleAlpha, dubleBeta
-        )
 
-        # Saving Preprocessed
-        processed_out_dir = PROCESSED_OUTPUT_DIR / f"{scene_name}_slice_{i:03d}"
-        processed_out_dir.mkdir(parents=True, exist_ok=True)
-        np.save(os.path.join(str(processed_out_dir), "coord.npy"), filtered_coords)
-        np.save(os.path.join(str(processed_out_dir), "color.npy"), filtered_colors)
-        np.save(os.path.join(str(processed_out_dir), "instance.npy"), filtered_instances)
-        np.save(os.path.join(str(processed_out_dir), "normal.npy"), filtered_normals)
-        np.save(os.path.join(str(processed_out_dir), "segment20.npy"), filtered_segment20)
-        np.save(os.path.join(str(processed_out_dir), "segment200.npy"), filtered_segment200)
+
+        try:
+            camera_pos = pose[:3, 3]  # extract the translation (camera position)
+            (filtered_coords, filtered_colors, filtered_instances,
+            filtered_normals, filtered_segment20, filtered_segment200) = cut_point_cloud_npy(
+                coords, colors, instances, normals, segment20, segment200,
+                camera_pos, phi, theta, dubleAlpha, dubleBeta
+            )
+
+            # Saving Preprocessed
+            processed_out_dir = PROCESSED_OUTPUT_DIR / f"{scene_name}_slice_{i:03d}"
+            processed_out_dir.mkdir(parents=True, exist_ok=True)
+            np.save(os.path.join(str(processed_out_dir), "coord.npy"), filtered_coords)
+            np.save(os.path.join(str(processed_out_dir), "color.npy"), filtered_colors)
+            np.save(os.path.join(str(processed_out_dir), "instance.npy"), filtered_instances)
+            np.save(os.path.join(str(processed_out_dir), "normal.npy"), filtered_normals)
+            np.save(os.path.join(str(processed_out_dir), "segment20.npy"), filtered_segment20)
+            np.save(os.path.join(str(processed_out_dir), "segment200.npy"), filtered_segment200)
+        except Exception as e:
+            print(f"Error Slicing current pointcloud: {e}")
+            print("skipping this one")
+            return False
+        
+        return True
 
     # print("Slicing complete. 15 filtered point clouds have been saved.")
 
@@ -365,43 +441,62 @@ if __name__ == "__main__":
     
     print(PROCESSED_OUTPUT_DIR)
     
-    """
-    We will only use the validation scene/scan set for now. The preprocessed data
-    is located in /dtu/blackhole/0e/169006/ScanNet/preprocessed/val/<scene> and 
-    the raw scans (with .sens files) are located in 
-    /dtu/datasets2/ScanNet/ScanNetV2/scans/<scene>/<scene>.sens.
-    
-    The validation scene set should be a subset of the raw scenes, so no errors should I arise,
-    we assert some sanity checks nonetheless.
-    
-    We store the ego-sliced processed scenes in PROCESSED_OUTPUT_DIR
-    """
-    
-    # loop over each scene directory in the preprocessed validation folder
-    # ignore sub directories
-
+    # Get all scene directories in the preprocessed validation folder
     scene_dirs = [scene_dir for scene_dir in PREPROCESSED_BASE_DIR.iterdir() if scene_dir.is_dir()]
-
-    # Take only the first 10 scenes for fine-tuning due to time and space limitations
-
-    scene_dirs = scene_dirs[:10]
     
-    for scene_dir in tqdm(scene_dirs, desc="Slicing Scenes", unit="scene"):
-        if scene_dir.is_dir():
+    # Initialize total scenes counter and the set of processed scenes
+    processed_scenes = set()
+    successful_scenes = 0
+    target_successful_scenes = 200
+    
+    # Create a queue of scenes to process
+    scene_queue = scene_dirs[:target_successful_scenes].copy()
+    next_scene_index = target_successful_scenes
+    
+    # Process scenes from the queue until we have enough successful scenes or run out of scenes
+    with tqdm(total=target_successful_scenes, desc="Processing Scenes", unit="scene") as pbar:
+        while scene_queue and successful_scenes < target_successful_scenes:
+            # Get the next scene from the queue
+            scene_dir = scene_queue.pop(0)
             scene_name = scene_dir.name
-            # print(f"Processing scene: {scene_name}")
             
-            # construct the path to the .sens file for that scene from the raw scans folder
-            path_to_sens_file = RAW_SCANS_BASE_DIR / scene_name / f"{scene_name}.sens"
-            
-            # check if the constructed .sens file exists
-            if not path_to_sens_file.exists():
-                print(f"[WARNING] Sens file for scene {scene_name} not found at {path_to_sens_file}. Skipping.")
+            # Skip if we've already processed this scene
+            if scene_name in processed_scenes:
                 continue
             
-            ego_slice(scene_name, scene_dir, path_to_sens_file)
+            print(f"Processing scene: {scene_name}")
+            processed_scenes.add(scene_name)
+            
+            # Construct the path to the .sens file
+            path_to_sens_file = RAW_SCANS_BASE_DIR / scene_name / f"{scene_name}.sens"
+            
+            # Check if the .sens file exists
+            if not path_to_sens_file.exists():
+                print(f"[WARNING] Sens file for scene {scene_name} not found at {path_to_sens_file}. Skipping.")
+                # Add a replacement scene if available
+                if next_scene_index < len(scene_dirs):
+                    scene_queue.append(scene_dirs[next_scene_index])
+                    next_scene_index += 1
+                continue
+            
+            # Try to process the scene
+            success = ego_slice(scene_name, scene_dir, path_to_sens_file, 2)
+            
+            # If processing was successful, increment counter
+            if success:
+                successful_scenes += 1
+                pbar.update(1)
+            # If not successful, add a replacement scene if available
+            else:
+                print(f"[WARNING] Scene {scene_name} did not produce enough valid slices. Adding replacement.")
+                if next_scene_index < len(scene_dirs):
+                    scene_queue.append(scene_dirs[next_scene_index])
+                    next_scene_index += 1
     
-    print("All scenes have been processed.")
+    if successful_scenes >= target_successful_scenes:
+        print(f"Successfully processed {successful_scenes} scenes!")
+    else:
+        print(f"Processed all available scenes, but only {successful_scenes} were successful.")
     
     
     ######## RUN Ego-slicing for 1 scene ########

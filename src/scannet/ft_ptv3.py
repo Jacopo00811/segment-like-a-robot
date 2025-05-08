@@ -9,10 +9,10 @@ from pointcept.utils.config import Config
 import os
 from pointcept.utils.env import get_random_seed, set_seed
 
-cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0a-scannet-lin.py"
-WEIGHTS = "./models/sonata/pretrain-sonata-v1m1-0-base.pth"
-DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/ego_sliced/preprocessed/"
-SAVE_PATH = "./exp/ego/sonata-lin-ego"
+cfg_path = "./Pointcept/configs/scannet/semseg-pt-v3m1-0-base-ft.py"
+WEIGHTS = "./models/PointTransformer_V3/model_best.pth"
+DATASET_ROOT = "/dtu/blackhole/0e/169006/ScanNet/preprocessed/"
+SAVE_PATH = "./exp/scannet/ft/ptv3"
 
 
 def config_parser(file_path, options):
@@ -39,13 +39,16 @@ def config_parser(file_path, options):
     return cfg
 
 
+
 def main_worker(cfg):
     cfg = default_setup(cfg)
+        
     cfg.data.test.data_root = DATASET_ROOT
     cfg.data.val.data_root = DATASET_ROOT
     cfg.data.train.data_root = DATASET_ROOT
 
     cfg.weight = WEIGHTS
+
     trainer = TRAINERS.build(dict(type=cfg.train.type, cfg=cfg))
     trainer.train()
 
@@ -54,10 +57,23 @@ def main():
     args = default_argument_parser().parse_args()
     cfg = config_parser(cfg_path, None)
 
+    cfg.epoch = 30
+    cfg.eval_epoch = 30
+    cfg.data.train.loop = 1
+    
+    cfg.test = dict(
+        type='SemSegTester',
+        verbose=True
+    )
+    
+    for i, hook in enumerate(cfg.hooks):
+        if hook.get('type') == 'PreciseEvaluator':
+            cfg.hooks[i] = dict(type='CheckpointSaver', save_freq=None)
+    
     launch(
-        main_worker,
+        main_worker,    
         num_gpus_per_machine=2,
-        num_machines=args.num_machines,
+        num_machines=1,
         machine_rank=args.machine_rank,
         dist_url=args.dist_url,
         cfg=(cfg,),
