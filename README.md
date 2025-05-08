@@ -64,7 +64,6 @@ uv pip install flash-attn --no-build-isolation
 pip uninstall torch-scatter
 pip install torch-scatter -f https://data.pyg.org/whl/torch-2.5.1+cu124.html
 ```
-##############################################
 
 # Development (Only for developers of the project)
 Blackhole location of data in DTU HPC cluster (read-only)
