@@ -13,6 +13,7 @@ from pointcept.utils.env import get_random_seed, set_seed
 
 cfg_path = "./Pointcept/configs/sonata/semseg-sonata-v1m1-0a-scannet-lin-ft.py"
 WEIGHTS = "./exp/ego/ft/sonata-lin/model/model_best.pth"
+HEAD_WEIGHTS_PATH = "./models/sonata/sonata_linear_prob_head_sc.pth"
 DATASET_ROOT = "/dtu/blackhole/0e/169006/Mini-ScanNet/ego_sliced/preprocessed/"
 SAVE_PATH = "./exp/ego/eval/sonata-lin"
 
@@ -51,6 +52,7 @@ def main_worker(cfg):
     cfg.data.val.data_root = DATASET_ROOT
 
     cfg.weight = WEIGHTS
+    cfg.head_weights_path = HEAD_WEIGHTS_PATH
 
     tester = TESTERS.build(test_cfg)    
     tester.test()
